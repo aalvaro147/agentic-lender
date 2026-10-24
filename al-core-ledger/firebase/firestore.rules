@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function hasRole(role) {
+      return isAuthenticated() && request.auth.token.role == role;
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || hasRole('underwriter');
+    }
+
+    // Application Collection Rules
+    match /applications/{appId} {
+      allow read: if isOwner(resource.data.borrowerId) 
+                  || (hasRole('broker') && resource.data.brokerId == request.auth.uid)
+                  || hasRole('underwriter');
+      allow create: if hasRole('borrower') || hasRole('broker');
+      allow update: if hasRole('underwriter') 
+                   || (hasRole('broker') && resource.data.brokerId == request.auth.uid);
+    }
+
+    // Immutable Audit Logs Rules
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow write: if hasRole('underwriter');
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Application",
+  "type": "object",
+  "properties": {
+    "applicationId": { "type": "string" },
+    "borrowerId": { "type": "string" },
+    "brokerId": { "type": "string" },
+    "status": { 
+      "type": "string", 
+      "enum": ["APPLIED", "AI_DELIBERATED", "UNDERWRITER_APPROVED", "FUNDED", "REJECTED"] 
+    },
+    "financialSpecs": {
+      "type": "object",
+      "properties": {
+        "grossIncome": { "type": "number" },
+        "existingDebt": { "type": "number" },
+        "deposit": { "type": "number" },
+        "requestedTerm": { "type": "integer" }
+      }
+    },
+    "propertySpecs": {
+      "type": "object",
+      "properties": {
+        "askingPrice": { "type": "number" },
+        "berRating": { "type": "string" },
+        "county": { "type": "string" }
+      }
+    },
+    "blockchainTx": {
+      "type": "object",
+      "properties": {
+        "auditHash": { "type": "string" },
+        "tokenId": { "type": "integer" },
+        "txHash": { "type": "string" }
+      }
+    }
+  },
+  "required": ["applicationId", "borrowerId", "status"]
+}

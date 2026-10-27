@@ -1,0 +1,21 @@
+{
+  "application_id": "APP-0001",
+  "property": {
+    "property_type": "semi_detached",
+    "county": "Dublin",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "floor_area_sqm": 95,
+    "ber_rating": "C2",
+    "year_built": 2005,
+    "asking_price_eur": 400000
+  },
+  "loan": {
+    "requested_amount_eur": 300000,
+    "term_months": 360,
+    "annual_interest_rate_pct": 4.0,
+    "net_monthly_income_eur": 5200,
+    "monthly_debt_obligations_eur": 200,
+    "monthly_living_expenses_eur": 1800
+  }
+}

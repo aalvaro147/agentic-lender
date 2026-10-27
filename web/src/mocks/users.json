@@ -1,0 +1,26 @@
+[
+  {
+    "uid": "mock-underwriter-01",
+    "email": "orla.hennessy@bank.example",
+    "password": "password123",
+    "displayName": "Orla Hennessy",
+    "role": "underwriter",
+    "brokerId": null
+  },
+  {
+    "uid": "mock-broker-01",
+    "email": "ciaran.oneill@broker.example",
+    "password": "password123",
+    "displayName": "Ciarán O'Neill",
+    "role": "broker",
+    "brokerId": "broker-01"
+  },
+  {
+    "uid": "mock-broker-02",
+    "email": "emma.byrne@broker.example",
+    "password": "password123",
+    "displayName": "Emma Byrne",
+    "role": "broker",
+    "brokerId": "broker-02"
+  }
+]

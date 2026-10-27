@@ -1,16 +1,53 @@
-# React + Vite
+# AL-Web – Broker & Underwriter Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React web portal for **AL (Agentic Lender)**: mortgage brokers and bank underwriting officers
+manage loan pipelines, inspect AI agent reasoning and approve loans on-chain.
 
-Currently, two official plugins are available:
+## Stack
+React · Vite · React Router · Tailwind CSS · Firebase (Auth, Firestore) · Vitest · Oxlint · Prettier
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Requirements
+- Node.js 24 LTS (`node -v`)
+- npm 11+
 
-## React Compiler
+## Setup
+```bash
+cd web
+npm install
+cp .env.example .env     # VITE_USE_MOCKS=true works without Firebase keys
+npm run dev              # http://localhost:5173
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build to `dist/` |
+| `npm run lint` | Oxlint |
+| `npm run format` | Prettier: format all files |
+| `npm test` | Vitest in watch mode |
+| `npm run test:run` | Vitest once (used by CI) |
 
-## Expanding the Oxlint configuration
+## Environment variables
+| Variable | Purpose |
+|---|---|
+| `VITE_USE_MOCKS` | `true` = mock data from `src/mocks/`, `false` = live Firebase |
+| `VITE_FIREBASE_*` | Firebase web config from the group project (never commit `.env`) |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Mock accounts (VITE_USE_MOCKS=true)
+| Email | Password | Role |
+|---|---|---|
+| orla.hennessy@bank.example | password123 | Underwriter |
+| ciaran.oneill@broker.example | password123 | Broker |
+| emma.byrne@broker.example | password123 | Broker |
+
+## Project structure
+```
+src/
+├── auth/       Auth context, role rules, protected routes
+├── services/   All data access (mock or Firebase)
+├── mocks/      Mock JSON matching docs/data-contract.md
+└── test/       Test setup
+```
+
+Data contract: [`docs/data-contract.md`](../docs/data-contract.md)

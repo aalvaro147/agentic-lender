@@ -1,10 +1,10 @@
 /* Origination pipeline (mock-up screens 02a and 02b).
-   Underwriters see every application; brokers see only their referred clients,
-   because getApplications() filters by the signed-in profile.
-   Filters and search: Sprint 2 (E2).
-   Story: WEB-15 */
+  Underwriters see every application; brokers see only their referred clients,
+  because getApplications() filters by the signed-in profile.
+  Stories: WEB-15, WEB-18, WEB-19, WEB-25 (summary cards),
+  WEB-20 / 21 / 22 (filters), WEB-23 (search + sort) */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import { ROLES } from '../auth/roles'
@@ -12,6 +12,15 @@ import { getApplications } from '../services/applicationService'
 import { RiskBadge, StatusBadge } from '../components/Badges'
 import { STATUS_LABELS } from '../utils/statuses'
 import { formatDate, formatEuro, formatMultiple, formatPercent } from '../utils/format'
+import { PipelineFilters } from '../components/PipelineFilters'
+import { SortableHeader } from '../components/SortableHeader'
+import {
+  DEFAULT_SORT,
+  EMPTY_FILTERS,
+  filterApplications,
+  nextSort,
+  sortApplications,
+} from '../utils/pipelineFilters'
 
 export function PipelinePage() {
   const { profile, role } = useAuth()
@@ -20,6 +29,8 @@ export function PipelinePage() {
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [sort, setSort] = useState(DEFAULT_SORT)
 
   /* ----------------------- LOAD DATA ----------------------- */
 
@@ -28,8 +39,8 @@ export function PipelinePage() {
 
     getApplications(profile)
       .then((data) => {
-        if (cancelled) return
-        // newest first (ISO dates sort correctly as text)
+        if (!cancelled) setApplications(data)
+        // newest first (ISO dates sort correctly as text
         setApplications([...data].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)))
       })
       .catch(() => {
@@ -44,13 +55,31 @@ export function PipelinePage() {
     }
   }, [profile])
 
-  /* ----------------------- SUMMARY COUNTS ----------------------- */
+  /* ----------------------- DERIVED DATA ----------------------- */
 
-  // { applied: 2, ai_deliberated: 2, ... }
-  const countsByStatus = applications.reduce((counts, app) => {
-    counts[app.status] = (counts[app.status] ?? 0) + 1
-    return counts
-  }, {})
+  // Recalculated only when the data, filters or sort change
+  const visibleApplications = useMemo(
+    () => sortApplications(filterApplications(applications, filters), sort),
+    [applications, filters, sort],
+  )
+
+  // Summary cards always count the whole portfolio, not just the filtered rows
+  const countsByStatus = useMemo(
+    () =>
+      applications.reduce((counts, app) => {
+        counts[app.status] = (counts[app.status] ?? 0) + 1
+        return counts
+      }, {}),
+    [applications],
+  )
+
+  /* ----------------------- HANDLERS ----------------------- */
+
+  const updateFilters = (changes) => setFilters((current) => ({ ...current, ...changes }))
+  const clearFilters = () => setFilters(EMPTY_FILTERS)
+  const changeSort = (column) => setSort((current) => nextSort(current, column))
+
+  const headerProps = { sort, onSort: changeSort }
 
   /* ----------------------- RENDER ----------------------- */
 
@@ -66,7 +95,7 @@ export function PipelinePage() {
         </p>
       </header>
 
-      {/* Status summary cards */}
+      {/* Status summary cards (WEB-25) */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {Object.entries(STATUS_LABELS).map(([code, label]) => (
           <div key={code} className="rounded-lg border border-line bg-white px-4 py-3">
@@ -76,7 +105,6 @@ export function PipelinePage() {
         ))}
       </div>
 
-      {/* Loading / error / empty / table */}
       {loading && (
         <p role="status" className="text-muted">
           Loading applications…
@@ -94,54 +122,84 @@ export function PipelinePage() {
       )}
 
       {!loading && !error && applications.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-line bg-white">
-          <table className="w-full min-w-[960px] border-collapse text-sm tabular-nums">
-            <thead className="bg-page text-left text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Application</th>
-                <th className="px-4 py-3 font-semibold">Borrower</th>
-                {!isBroker && <th className="px-4 py-3 font-semibold">Broker</th>}
-                <th className="px-4 py-3 text-right font-semibold">Loan</th>
-                <th className="px-4 py-3 text-right font-semibold">LTV</th>
-                <th className="px-4 py-3 text-right font-semibold">LTI</th>
-                <th className="px-4 py-3 text-right font-semibold">DTI</th>
-                <th className="px-4 py-3 font-semibold">Risk</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Submitted</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applications.map((app) => (
-                <tr key={app.id} className="border-t border-line">
-                  <td className="px-4 py-3 font-mono text-xs">
-                    <Link
-                      to={`/applications/${app.id}`}
-                      className="text-brand hover:text-brand-dark"
-                    >
-                      {app.id}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{app.borrowerName}</p>
-                    <p className="text-xs text-muted">{app.location}</p>
-                  </td>
-                  {!isBroker && <td className="px-4 py-3">{app.brokerName}</td>}
-                  <td className="px-4 py-3 text-right">{formatEuro(app.loanAmount)}</td>
-                  <td className="px-4 py-3 text-right">{formatPercent(app.ltv)}</td>
-                  <td className="px-4 py-3 text-right">{formatMultiple(app.lti)}</td>
-                  <td className="px-4 py-3 text-right">{formatPercent(app.dti)}</td>
-                  <td className="px-4 py-3">
-                    <RiskBadge tier={app.riskTier} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={app.status} />
-                  </td>
-                  <td className="px-4 py-3 text-muted">{formatDate(app.submittedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <PipelineFilters
+            filters={filters}
+            onChange={updateFilters}
+            onClear={clearFilters}
+            shown={visibleApplications.length}
+            total={applications.length}
+          />
+
+          {visibleApplications.length === 0 ? (
+            <div className="rounded-lg border border-line bg-white p-8 text-center">
+              <p className="font-medium">No applications match these filters.</p>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 font-medium text-brand hover:text-brand-dark"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-line bg-white">
+              <table className="w-full min-w-[960px] border-collapse text-sm tabular-nums">
+                <thead className="bg-page text-xs text-muted">
+                  <tr>
+                    <SortableHeader label="Application" column="id" {...headerProps} />
+                    <SortableHeader label="Borrower" column="borrowerName" {...headerProps} />
+                    {!isBroker && (
+                      <SortableHeader label="Broker" column="brokerName" {...headerProps} />
+                    )}
+                    <SortableHeader
+                      label="Loan"
+                      column="loanAmount"
+                      align="right"
+                      {...headerProps}
+                    />
+                    <SortableHeader label="LTV" column="ltv" align="right" {...headerProps} />
+                    <SortableHeader label="LTI" column="lti" align="right" {...headerProps} />
+                    <SortableHeader label="DTI" column="dti" align="right" {...headerProps} />
+                    <SortableHeader label="Risk" column="riskTier" {...headerProps} />
+                    <SortableHeader label="Status" column="status" {...headerProps} />
+                    <SortableHeader label="Submitted" column="submittedAt" {...headerProps} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleApplications.map((app) => (
+                    <tr key={app.id} className="border-t border-line">
+                      <td className="px-4 py-3 font-mono text-xs">
+                        <Link
+                          to={`/applications/${app.id}`}
+                          className="text-brand hover:text-brand-dark"
+                        >
+                          {app.id}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium">{app.borrowerName}</p>
+                        <p className="text-xs text-muted">{app.location}</p>
+                      </td>
+                      {!isBroker && <td className="px-4 py-3">{app.brokerName}</td>}
+                      <td className="px-4 py-3 text-right">{formatEuro(app.loanAmount)}</td>
+                      <td className="px-4 py-3 text-right">{formatPercent(app.ltv)}</td>
+                      <td className="px-4 py-3 text-right">{formatMultiple(app.lti)}</td>
+                      <td className="px-4 py-3 text-right">{formatPercent(app.dti)}</td>
+                      <td className="px-4 py-3">
+                        <RiskBadge tier={app.riskTier} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={app.status} />
+                      </td>
+                      <td className="px-4 py-3 text-muted">{formatDate(app.submittedAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
 
       <p className="text-xs text-muted">

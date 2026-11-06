@@ -14,8 +14,8 @@ describe('roles', () => {
     expect(canAccess(ROLES.BROKER, 'settlement')).toBe(false)
   })
 
-  it('shows brokers only "My clients" in the menu', () => {
-    expect(getNavItems(ROLES.BROKER)).toEqual([{ path: '/pipeline', label: 'My client' }])
+  it('shows brokers only "My client" in the menu', () => {
+    expect(getNavItems(ROLES.BROKER)).toEqual([{ path: '/pipeline', label: 'My clients' }])
   })
 
   it('shows underwriters three menu items in order', () => {

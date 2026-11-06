@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local AL-Core deployment data and API credentials
+.env
+al-core-ledger/.env
+al-core-ledger/node_modules/
+al-core-ledger/deployments/*.json
+al-core-ledger/secrets/
+al-core-ledger/.venv/
+al-core-ledger/artifacts/
+al-core-ledger/cache/
+al-core-ledger/.firebase/
+al-core-ledger/firebase-debug.log
+al-core-ledger/firestore-debug.log
+al-core-ledger/ui-debug.log
+al-core-ledger/__pycache__/
+al-core-ledger/.pytest_cache/

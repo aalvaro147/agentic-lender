@@ -27,11 +27,11 @@ The platform is structured into four core subsystems that cover the complete lif
 
 4. **⛓️ Core Infrastructure & Ledger (`AL-Core` / `al-core-ledger`)**
    - **Role:** Centralized Data Layer, RBAC & Blockchain Settlement.
-   - **Tech Stack:** Firebase Auth, Cloud Firestore, Node.js, Hardhat, Python / Ethers.js, Solidity.
+   - **Tech Stack:** Firebase Auth, Cloud Firestore, FastAPI / Firebase Admin / Web3.py, Hardhat, Solidity.
    - **Functionality:**
      - **Authentication & RBAC:** Firebase Authentication with custom claims (`borrower`, `broker`, `underwriter`).
      - **Database Layer:** Cloud Firestore maintaining stateful application records, user profiles, and audit trails.
-     - **Integration Glue Layer:** Python and Ethers.js listeners that calculate SHA-256 hashes of approved credit memos and coordinate blockchain dispatches.
+     - **Integration API:** A Firebase-authenticated FastAPI service that hashes underwriter approvals, records audit proofs and coordinates loan-token minting.
      - **EVM Blockchain Ledger:** Ethereum-compatible smart contracts (`AuditRegistry.sol` for immutable audit logging and `LoanToken.sol` ERC-721 NFT for loan tokenization with green incentives).
 
 ---
@@ -48,6 +48,7 @@ graph TD
     classDef ai fill:#0f172a,stroke:#a855f7,stroke-width:2px,color:#f8fafc
     classDef glue fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
     classDef ledger fill:#0f172a,stroke:#6366f1,stroke-width:2px,color:#f8fafc
+
 
     %% 1. MOBILE APP MODULE
     subgraph MODULE_MOBILE ["1. MOBILE APP (AL-Mobile)"]
@@ -67,8 +68,8 @@ graph TD
             Firestore[("Cloud Firestore Database<br/>• /users (User Profiles & Roles)<br/>• /applications (State, Financials, Specs)<br/>• /audit_logs (Deliberation Logs & Sign-offs)")]:::auth
         end
 
-        subgraph GLUE ["Integration Glue Layer"]
-            Listener["Python / Ethers.js Web3 Listener<br/>• SHA-256 Credit Memo Hashing Engine<br/>• Hardhat / Testnet Contract Dispatch"]:::glue
+        subgraph GLUE ["Integration API"]
+            Listener["FastAPI Core Ledger API<br/>• Firebase ID-token / role validation<br/>• Canonical SHA-256 audit hashing<br/>• EVM transaction dispatch"]:::glue
         end
 
         subgraph LEDGER ["EVM Blockchain Ledger (al-core-ledger)"]
@@ -94,9 +95,10 @@ graph TD
     ML -- "2. Write Valuation" --> Firestore
     Agents -- "2. Write Decision Logs" --> Firestore
 
-    Firestore -- "3. Trigger Approved State" --> Listener
-    Listener -- "4. Dispatch On-Chain Commit" --> AuditContract
-    Listener -- "4. Dispatch On-Chain Commit" --> LoanContract
+    WebPortal -- "Underwriter approval + Firebase ID token" --> Listener
+    Listener -- "Verify role / reserve approval / save receipt" --> Firestore
+    Listener -- "JSON-RPC transaction" --> AuditContract
+    Listener -- "JSON-RPC transaction" --> LoanContract
 ```
 
 ### 🔄 End-to-End Execution Flow
@@ -104,4 +106,9 @@ graph TD
 1. **Application Intake:** The borrower (via `AL-Mobile`) or broker (via `AL-Web`) authenticates through Firebase Auth and submits the mortgage application to Cloud Firestore.
 2. **AI Valuation & Risk Deliberation:** Firestore events trigger the `AL-AI Engine`. The supervised ML model estimates property valuation, while the Multi-Agent Deliberation Committee stress-tests affordability and risk, storing valuation reports and decision logs back into Firestore.
 3. **Underwriter Review & Sign-Off:** Human underwriters inspect the consolidated dossier and AI deliberations via `AL-Web` to finalize and sign off on the approval state.
-4. **On-Chain Commit & Tokenization:** Transitioning to `Approved` triggers the Integration Glue Layer. The listener hashes the final credit memo with SHA-256 and coordinates transaction dispatch to the EVM Ledger, recording audit proofs in `AuditRegistry.sol` and minting the loan token note in `LoanToken.sol` (with green discounts applied for BER A1–A3 properties).
+4. **On-Chain Commit & Tokenization:** An authenticated underwriter submits approval through the Core Ledger API. The API hashes the canonical approval payload with SHA-256, records the proof in `AuditRegistry.sol`, and mints the note in `LoanToken.sol` (with green discounts for BER A1–A3). Confirmed transaction metadata is then saved to Firestore.
+
+For the implementable API contract, local setup, diagrams, Firestore schemas and
+role rules, see [`al-core-ledger/README.md`](al-core-ledger/README.md),
+[`al-core-ledger/docs/architecture.md`](al-core-ledger/docs/architecture.md)
+and [`al-core-ledger/docs/integration-api.md`](al-core-ledger/docs/integration-api.md).

@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasRole(role) {
+      return signedIn() && request.auth.token.role == role;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isAssignedBroker(application) {
+      return hasRole('broker') && application.brokerId == request.auth.uid;
+    }
+
+    function canReadApplication(application) {
+      return isOwner(application.borrowerId)
+        || isAssignedBroker(application)
+        || hasRole('underwriter');
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || hasRole('underwriter');
+      allow list: if hasRole('underwriter');
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.role == request.auth.token.role;
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName']);
+      allow delete: if false;
+    }
+
+    match /applications/{applicationId} {
+      allow get: if canReadApplication(resource.data);
+      allow list: if hasRole('underwriter')
+        || (hasRole('borrower') && resource.data.borrowerId == request.auth.uid)
+        || (hasRole('broker') && resource.data.brokerId == request.auth.uid);
+
+      allow create: if request.resource.data.status == 'APPLIED'
+        && request.resource.data.applicationId == applicationId
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.borrowerId is string
+        && request.resource.data.borrowerId.size() > 0
+        && request.resource.data.financialSpecs is map
+        && request.resource.data.propertySpecs is map
+        && request.resource.data.keys().hasOnly([
+          'applicationId',
+          'borrowerId',
+          'brokerId',
+          'status',
+          'financialSpecs',
+          'propertySpecs',
+          'createdAt',
+          'updatedAt'
+        ])
+        && (
+          (hasRole('borrower')
+            && request.resource.data.borrowerId == request.auth.uid
+            && (
+              !request.resource.data.keys().hasAny(['brokerId'])
+              || request.resource.data.brokerId == null
+            ))
+          || (hasRole('broker')
+            && request.resource.data.brokerId == request.auth.uid)
+        );
+
+      allow update: if (
+        hasRole('borrower')
+          && resource.data.borrowerId == request.auth.uid
+          && resource.data.status == 'APPLIED'
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.borrowerId == resource.data.borrowerId
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['financialSpecs', 'propertySpecs', 'updatedAt'])
+      ) || (
+        hasRole('broker')
+          && resource.data.brokerId == request.auth.uid
+          && resource.data.status == 'APPLIED'
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.brokerId == resource.data.brokerId
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['financialSpecs', 'propertySpecs', 'updatedAt'])
+      );
+
+      allow delete: if false;
+    }
+
+    match /audit_logs/{logId} {
+      allow get, list: if hasRole('underwriter')
+        || (
+          signedIn()
+          && exists(/databases/$(database)/documents/applications/$(resource.data.applicationId))
+          && canReadApplication(get(
+            /databases/$(database)/documents/applications/$(resource.data.applicationId)
+          ).data)
+        );
+      allow create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

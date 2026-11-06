@@ -1,30 +1,55 @@
-import hashlib
+from __future__ import annotations
+
+import argparse
 import json
-from web3 import Web3
+import os
+import sys
+from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
-# Connect to local Hardhat node
-w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 
-def process_underwriter_approval(application_id, borrower_hash, principal, base_apr_bps, term_months, ber_rating, credit_memo_text):
-    # 1. Generate SHA-256 hash of credit memo
-    sha256_hash = "0x" + hashlib.sha256(credit_memo_text.encode('utf-8')).hexdigest()
-    app_id_bytes = "0x" + hashlib.sha256(application_id.encode('utf-8')).hexdigest()
-    
-    print(f"Computed SHA-256 Credit Memo Hash: {sha256_hash}")
-    
-    # 2. Interact with Smart Contracts (Targeting local network addresses)
-    # Note: Replace contract_address and ABI with actual values post-deployment
-    return {
-        "status": "SUCCESS",
-        "applicationId": application_id,
-        "sha256Hash": sha256_hash,
-        "appIdBytes": app_id_bytes,
-        "berRating": ber_rating,
-        "discountEligible": ber_rating in ["A1", "A2", "A3"]
-    }
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Submit an underwriter settlement payload to the authenticated Core Ledger API."
+    )
+    parser.add_argument("application_id", help="Firestore application document ID")
+    parser.add_argument("payload_file", type=Path, help="JSON file matching POST /settlement")
+    args = parser.parse_args()
+
+    api_url = os.environ.get("CORE_API_URL", "http://localhost:8000").rstrip("/")
+    id_token = os.environ.get("FIREBASE_ID_TOKEN")
+    if not id_token:
+        parser.error("Set FIREBASE_ID_TOKEN to a fresh Firebase ID token for an underwriter.")
+    if not args.payload_file.is_file():
+        parser.error(f"Payload file not found: {args.payload_file}")
+
+    with args.payload_file.open(encoding="utf-8") as payload_file:
+        payload = json.load(payload_file)
+
+    request = Request(
+        f"{api_url}/v1/applications/{args.application_id}/settlement",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {id_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=180) as response:
+            result = json.load(response)
+    except HTTPError as error:
+        error_body = error.read().decode("utf-8", errors="replace")
+        print(f"Core API returned HTTP {error.code}: {error_body}", file=sys.stderr)
+        return 1
+    except URLError as error:
+        print(f"Cannot reach Core API: {error.reason}", file=sys.stderr)
+        return 1
+
+    print(json.dumps(result, indent=2))
+    return 0
+
 
 if __name__ == "__main__":
-    sample_memo = "UNDERWRITER APPROVAL: Income verified. LTV 75%. Risk Tier Low."
-    result = process_underwriter_approval("APP-10042", "0x123...abc", 350000, 350, 360, "A2", sample_memo)
-    print(json.dumps(result, indent=2))
-
+    raise SystemExit(main())

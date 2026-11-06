@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agentic Lender audit log",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "applicationId": { "type": "string", "minLength": 1 },
+    "borrowerId": { "type": "string", "minLength": 1 },
+    "brokerId": { "type": ["string", "null"] },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "AI_ASSESSMENT_CREATED",
+        "UNDERWRITER_APPROVED",
+        "UNDERWRITER_REJECTED",
+        "LEDGER_SETTLEMENT_CONFIRMED"
+      ]
+    },
+    "actorUid": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "details": { "type": "object" },
+    "auditHash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{64}$"
+    }
+  },
+  "required": ["applicationId", "eventType", "actorUid", "createdAt"]
+}

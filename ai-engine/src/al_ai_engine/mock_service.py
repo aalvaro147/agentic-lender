@@ -1,76 +1,157 @@
+"""Mock assessment. All financial figures are calculated here in Python.
+
+Valuation and the recommendation rules are placeholders (isMock=True).
+Language models will only explain these numbers; they never calculate them.
+"""
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_UP
+
 from .schemas import (
-    Affordability, AssessmentRequest, AssessmentResponse,
+    Affordability, AiAssessment, AssessmentInput, BerRating,
     Recommendation, StressTest, Valuation,
 )
 
-MOCK_MODEL_VERSION = "mock-0.1"
+MODEL_VERSION = "mock-0.2"
+BER_DISCOUNT_BANDS = {BerRating.A1, BerRating.A2, BerRating.A3}
+BER_DISCOUNT_BPS = 25  # mirrors the AL-Core contract
 
 
-def monthly_repayment(principal: float, annual_rate_pct: float, term_months: int) -> float:
-    r = annual_rate_pct / 1200
-    if r == 0:
-        return principal / term_months
-    return principal * r / (1 - (1 + r) ** -term_months)
+@dataclass(frozen=True)
+class AssessmentConfig:
+    base_apr_bps: int = 350                 # mock assumption, not a market rate
+    stress_increases_bps: tuple = (100, 200, 300)
+    stress_pass_bps: int = 200              # must stay affordable at this rise
+    max_loan_to_income: Decimal = Decimal("4.0")   # placeholder borrowing cap
+    max_ltv_bps: int = 9000                 # placeholder
+    conditional_ltv_bps: int = 8000         # placeholder
+    overvalued_tolerance_pct: int = 5
+    mock_value_pct_of_asking: int = 97      # mock "model" output
 
 
-def assess(req: AssessmentRequest) -> AssessmentResponse:
-    p, loan = req.property, req.loan
-    warnings: list[str] = ["MOCK RESPONSE: valuation and recommendation are placeholders."]
+DEFAULT_CONFIG = AssessmentConfig()
 
-    # Placeholder valuation: fixed 2% below asking price
-    estimated = round(p.asking_price_eur * 0.98, 2)
-    ltv = loan.requested_amount_eur / estimated * 100
 
-    payment = monthly_repayment(loan.requested_amount_eur, loan.annual_interest_rate_pct, loan.term_months)
-    stress = [
-        StressTest(
-            rate_increase_bps=bps,
-            monthly_repayment_eur=round(
-                monthly_repayment(loan.requested_amount_eur,
-                                  loan.annual_interest_rate_pct + bps / 100,
-                                  loan.term_months), 2),
-        )
-        for bps in (100, 200, 300)
-    ]
-
-    dti = surplus = None
-    if loan.net_monthly_income_eur:
-        debts = loan.monthly_debt_obligations_eur or 0
-        dti = round((payment + debts) / loan.net_monthly_income_eur * 100, 2)
-        if loan.monthly_living_expenses_eur is not None:
-            surplus = round(loan.net_monthly_income_eur - debts
-                            - loan.monthly_living_expenses_eur - payment, 2)
-        else:
-            warnings.append("Living expenses missing: disposable surplus not calculated.")
+def monthly_repayment(principal: int, apr_bps: int, months: int) -> int:
+    """Annuity repayment in minor units, rounded half up."""
+    if apr_bps == 0:
+        pay = Decimal(principal) / Decimal(months)
     else:
-        warnings.append("Net monthly income missing: DTI and surplus not calculated.")
+        r = Decimal(apr_bps) / Decimal(10000) / Decimal(12)
+        factor = (1 + r) ** months
+        pay = Decimal(principal) * r * factor / (factor - 1)
+    return int(pay.quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
-    # Placeholder decision rules
-    if ltv > 90:
-        rec = Recommendation.DECLINE
-    elif ltv > 80 or (dti is not None and dti > 35):
-        rec = Recommendation.CONDITIONALLY_APPROVE
+
+def effective_apr_bps(base_bps: int, ber: BerRating) -> int:
+    if ber in BER_DISCOUNT_BANDS:
+        return max(0, base_bps - BER_DISCOUNT_BPS)
+    return base_bps
+
+
+def _eur(minor: int) -> str:
+    return f"EUR {minor / 100:,.2f}"
+
+
+def assess(
+    data: AssessmentInput,
+    cfg: AssessmentConfig = DEFAULT_CONFIG,
+    now: datetime | None = None,
+) -> AiAssessment:
+    fin, prop = data.financialSpecs, data.propertySpecs
+    warnings = ["MOCK OUTPUT: not a real valuation or lending decision."]
+
+    # Valuation (placeholder) and verified LTV on the lower of asking/estimate
+    asking = prop.askingPriceMinorUnits
+    estimate = asking * cfg.mock_value_pct_of_asking // 100
+    basis = min(asking, estimate)
+    ltv_bps = (fin.loanAmountMinorUnits * 10000 + basis // 2) // basis
+    overvalued = asking > estimate * (100 + cfg.overvalued_tolerance_pct) / 100
+    if overvalued:
+        warnings.append("Asking price exceeds estimated value beyond tolerance.")
+    if prop.berRating == BerRating.UNKNOWN:
+        warnings.append("BER rating unknown: no BER rate discount applied.")
+
+    # Affordability
+    apr = effective_apr_bps(cfg.base_apr_bps, prop.berRating)
+    term = fin.requestedTermMonths
+    income = fin.netMonthlyIncomeMinorUnits
+    fixed = fin.monthlyExpensesMinorUnits + fin.existingMonthlyDebtMinorUnits
+    repay = monthly_repayment(fin.loanAmountMinorUnits, apr, term)
+    surplus = income - fixed - repay
+    dti_bps = (repay + fin.existingMonthlyDebtMinorUnits) * 10000 // income
+    lti = (Decimal(fin.loanAmountMinorUnits) / Decimal(income * 12)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+
+    stress = []
+    for inc in cfg.stress_increases_bps:
+        s_apr = apr + inc
+        s_pay = monthly_repayment(fin.loanAmountMinorUnits, s_apr, term)
+        stress.append(StressTest(
+            rateIncreaseBps=inc, aprBps=s_apr,
+            monthlyRepaymentMinorUnits=s_pay,
+            disposableSurplusMinorUnits=income - fixed - s_pay,
+        ))
+    pass_test = next(s for s in stress if s.rateIncreaseBps == cfg.stress_pass_bps)
+
+    # Placeholder recommendation rules
+    reasons = []
+    if surplus < 0:
+        reasons.append("negative disposable surplus")
+    if lti > cfg.max_loan_to_income:
+        reasons.append(f"loan-to-income {lti}x above placeholder cap")
+    if ltv_bps > cfg.max_ltv_bps:
+        reasons.append("LTV above placeholder maximum")
+
+    conditions = []
+    if pass_test.disposableSurplusMinorUnits < 0:
+        conditions.append(f"unaffordable at +{cfg.stress_pass_bps} bps")
+    if ltv_bps > cfg.conditional_ltv_bps:
+        conditions.append("LTV above conditional threshold")
+    if overvalued:
+        conditions.append("asking price above estimated value")
+
+    if reasons:
+        rec, why = Recommendation.DECLINE, reasons
+    elif conditions:
+        rec, why = Recommendation.CONDITIONALLY_APPROVE, conditions
     else:
-        rec = Recommendation.APPROVE
+        rec, why = Recommendation.APPROVE, ["all placeholder checks passed"]
 
-    memo = (f"[MOCK] LTV {ltv:.1f}%, repayment EUR {payment:,.2f}/month. "
-            f"Recommendation: {rec.value}. Qualitative placeholder for human review.")
+    memo = (
+        f"MOCK credit memo. Qualitative assessment for human underwriter review. "
+        f"Recommendation: {rec.value} ({'; '.join(why)}). "
+        f"Loan {_eur(fin.loanAmountMinorUnits)} over {term} months at "
+        f"{apr / 100:.2f}% APR; repayment {_eur(repay)}/month; "
+        f"LTV {ltv_bps / 100:.2f}%; DTI {dti_bps / 100:.2f}%; "
+        f"disposable surplus {_eur(surplus)}/month."
+    )
 
-    return AssessmentResponse(
-        application_id=req.application_id,
+    return AiAssessment(
         recommendation=rec,
+        createdAt=now or datetime.now(timezone.utc),
+        modelVersion=MODEL_VERSION,
         valuation=Valuation(
-            estimated_value_eur=estimated,
-            asking_price_eur=p.asking_price_eur,
-            overvalued=p.asking_price_eur > estimated * 1.05,
-            model_version=MOCK_MODEL_VERSION,
+            estimatedValueMinorUnits=estimate,
+            modelVersion=MODEL_VERSION,
+            ltvBps=ltv_bps,
         ),
         affordability=Affordability(
-            ltv_pct=round(ltv, 2), dti_pct=dti,
-            monthly_repayment_eur=round(payment, 2),
-            disposable_surplus_eur=surplus, stress_tests=stress,
+            aprBps=apr,
+            monthlyRepaymentMinorUnits=repay,
+            dtiBps=dti_bps,
+            disposableSurplusMinorUnits=surplus,
+            loanToIncomeMultiple=float(lti),
+            stressTests=stress,
+            assumptions=[
+                f"Base APR {cfg.base_apr_bps} bps (mock assumption).",
+                f"BER A1-A3 discount of {BER_DISCOUNT_BPS} bps applied.",
+                "DTI = (new repayment + existing debt) / net monthly income.",
+                "Surplus = income - expenses - existing debt - repayment.",
+                "Borrowing cap and LTV limits are placeholders, not regulatory rules.",
+            ],
         ),
-        credit_memo=memo,
+        creditMemo=memo,
         warnings=warnings,
-        is_mock=True,
     )

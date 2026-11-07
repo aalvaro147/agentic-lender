@@ -1,39 +1,13 @@
+"""AL-AI schemas aligned with the AL-Core Firestore contract.
+
+Amounts are integer minor units (cents), rates are basis points and terms are
+months. Identity fields (borrowerId, brokerId, names) are deliberately absent:
+the engine never reads them. The Firestore document ID is the application ID.
+"""
+from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field
 
-
-class PropertyType(str, Enum):
-    DETACHED = "detached"
-    SEMI_DETACHED = "semi_detached"
-    TERRACED = "terraced"
-    APARTMENT = "apartment"
-
-
-class PropertyData(BaseModel):
-    property_type: PropertyType
-    county: str = Field(min_length=2)
-    bedrooms: int = Field(ge=0, le=20)
-    bathrooms: int = Field(ge=0, le=20)
-    floor_area_sqm: float = Field(gt=0)
-    ber_rating: str | None = Field(default=None, description="e.g. A1, C2, G")
-    year_built: int | None = Field(default=None, ge=1600, le=2100)
-    asking_price_eur: float = Field(gt=0)
-
-
-class LoanData(BaseModel):
-    requested_amount_eur: float = Field(gt=0)
-    term_months: int = Field(ge=12, le=480)
-    annual_interest_rate_pct: float = Field(ge=0, le=30)
-    # Optional until agreed with AL-Core / AL-Mobile
-    net_monthly_income_eur: float | None = Field(default=None, ge=0)
-    monthly_debt_obligations_eur: float | None = Field(default=None, ge=0)
-    monthly_living_expenses_eur: float | None = Field(default=None, ge=0)
-
-
-class AssessmentRequest(BaseModel):
-    application_id: str = Field(min_length=1, description="Pass-through only; not used in analysis")
-    property: PropertyData
-    loan: LoanData
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Recommendation(str, Enum):
@@ -42,31 +16,97 @@ class Recommendation(str, Enum):
     DECLINE = "DECLINE"
 
 
+class BerRating(str, Enum):
+    A1 = "A1"
+    A2 = "A2"
+    A3 = "A3"
+    B1 = "B1"
+    B2 = "B2"
+    B3 = "B3"
+    C1 = "C1"
+    C2 = "C2"
+    C3 = "C3"
+    D1 = "D1"
+    D2 = "D2"
+    E1 = "E1"
+    E2 = "E2"
+    F = "F"
+    G = "G"
+    UNKNOWN = "UNKNOWN"
+
+
+# ---------- Input (read from applications/{applicationId}) ----------
+class FinancialSpecs(BaseModel):
+    """Required inputs. Missing values are validation errors, never zero."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    loanAmountMinorUnits: int = Field(gt=0)
+    requestedTermMonths: int = Field(ge=12, le=480)
+    netMonthlyIncomeMinorUnits: int = Field(gt=0)
+    monthlyExpensesMinorUnits: int = Field(ge=0)
+    existingMonthlyDebtMinorUnits: int = Field(ge=0)
+
+
+class PropertySpecs(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    askingPriceMinorUnits: int = Field(gt=0)
+    berRating: BerRating = BerRating.UNKNOWN
+    county: str = Field(min_length=1)
+    propertyType: str | None = None
+    floorAreaSqM: float | None = Field(default=None, gt=0)
+    bedrooms: int | None = Field(default=None, ge=0)
+
+
+class AssessmentInput(BaseModel):
+    """applicationId is a pass-through key and is never analysed."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    applicationId: str = Field(min_length=1)
+    financialSpecs: FinancialSpecs
+    propertySpecs: PropertySpecs
+
+
+# ---------- Output (written to aiAssessment) ----------
 class Valuation(BaseModel):
-    estimated_value_eur: float
-    asking_price_eur: float
-    overvalued: bool
-    model_version: str
+    estimatedValueMinorUnits: int
+    currency: str = "EUR"
+    modelVersion: str
+    ltvBps: int
 
 
 class StressTest(BaseModel):
-    rate_increase_bps: int
-    monthly_repayment_eur: float
+    rateIncreaseBps: int
+    aprBps: int
+    monthlyRepaymentMinorUnits: int
+    disposableSurplusMinorUnits: int
 
 
 class Affordability(BaseModel):
-    ltv_pct: float
-    dti_pct: float | None
-    monthly_repayment_eur: float
-    disposable_surplus_eur: float | None
-    stress_tests: list[StressTest]
+    aprBps: int
+    monthlyRepaymentMinorUnits: int
+    dtiBps: int
+    disposableSurplusMinorUnits: int
+    loanToIncomeMultiple: float
+    stressTests: list[StressTest]
+    assumptions: list[str]
+
+
+class AiAssessment(BaseModel):
+    recommendation: Recommendation
+    createdAt: datetime
+    isMock: bool = True
+    modelVersion: str
+    valuation: Valuation
+    affordability: Affordability
+    creditMemo: str
+    warnings: list[str] = []
 
 
 class AssessmentResponse(BaseModel):
-    application_id: str
-    recommendation: Recommendation
-    valuation: Valuation
-    affordability: Affordability
-    credit_memo: str
-    warnings: list[str]
-    is_mock: bool
+    """REST test-harness response only; Firestore stores aiAssessment directly."""
+
+    applicationId: str
+    aiAssessment: AiAssessment

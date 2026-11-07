@@ -1,0 +1,15 @@
+{
+  "applicationId": "APP-0001",
+  "financialSpecs": {
+    "loanAmountMinorUnits": 28000000,
+    "requestedTermMonths": 300,
+    "netMonthlyIncomeMinorUnits": 650000,
+    "monthlyExpensesMinorUnits": 180000,
+    "existingMonthlyDebtMinorUnits": 20000
+  },
+  "propertySpecs": {
+    "askingPriceMinorUnits": 35000000,
+    "berRating": "B2",
+    "county": "Dublin"
+  }
+}

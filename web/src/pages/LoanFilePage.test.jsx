@@ -32,10 +32,11 @@ describe('LoanFilePage', () => {
     expect(screen.getByText('Medium risk')).toBeInTheDocument()
     expect(screen.getByText(/Broker: Ciarán O'Neill/)).toBeInTheDocument()
     expect(screen.getByText(/Submitted 08 Oct 2026/)).toBeInTheDocument()
-    expect(screen.getByText('€342,000')).toBeInTheDocument()
-    expect(screen.getByText('89.3%')).toBeInTheDocument()
-    expect(screen.getByText('3.98\u00D7')).toBeInTheDocument()
-    expect(screen.getByText('24.9%')).toBeInTheDocument()
+    const figures = screen.getByRole('region', { name: 'Headline figures' })
+    expect(within(figures).getByText('€342,000')).toBeInTheDocument()
+    expect(within(figures).getByText('89.3%')).toBeInTheDocument()
+    expect(within(figures).getByText('3.98×')).toBeInTheDocument()
+    expect(within(figures).getByText('24.9%')).toBeInTheDocument()
   })
 
   it('shows the property specification (WEB-30)', async () => {
@@ -49,14 +50,12 @@ describe('LoanFilePage', () => {
     expect(within(property).getByText('B2')).toBeInTheDocument()
   })
 
-  it('shows labelled placeholders for sections built in later stories (D7)', async () => {
+  it('shows labelled placeholders for the sections still to build (D7)', async () => {
     openAs(orla, 'AL-2026-0148')
     await screen.findByRole('heading', { name: 'Aoife Murphy' })
 
     for (const [title, story] of [
-      ['Collateral assessment', 'WEB-27'],
       ['Debt-to-income breakdown', 'WEB-28'],
-      ['Loan structure', 'WEB-29'],
       ['Lifecycle', 'WEB-31'],
     ]) {
       const section = screen.getByRole('region', { name: title })
@@ -99,5 +98,24 @@ describe('LoanFilePage', () => {
       'href',
       '/pipeline',
     )
+  })
+
+  it('shows the collateral and loan structure cards instead of placeholders (WEB-27, WEB-29)', async () => {
+    openAs(orla, 'AL-2026-0148')
+
+    const collateral = await screen.findByRole('region', { name: 'Collateral assessment' })
+    expect(within(collateral).getByText('Asking price 3.1% above valuation')).toBeInTheDocument()
+    const loan = screen.getByRole('region', { name: 'Loan structure' })
+    expect(within(loan).getByText('€53,000 (13.4%)')).toBeInTheDocument()
+    expect(screen.queryByText('Coming in WEB-27')).not.toBeInTheDocument()
+    expect(screen.queryByText('Coming in WEB-29')).not.toBeInTheDocument()
+  })
+
+  it('shows the asking price but no valuation before the AI has run (D10)', async () => {
+    openAs(orla, 'AL-2026-0146')
+
+    const collateral = await screen.findByRole('region', { name: 'Collateral assessment' })
+    expect(within(collateral).getByText('€525,000')).toBeInTheDocument()
+    expect(within(collateral).getByText('Valuation pending AI assessment.')).toBeInTheDocument()
   })
 })

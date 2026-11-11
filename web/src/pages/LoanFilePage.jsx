@@ -1,6 +1,7 @@
 /* Loan file: one application in detail (mock-up screen 03).
    Stories: WEB-26 (open from the pipeline; unknown ID → "not found"),
-   WEB-30 (property specification), WEB-15 (brokers cannot open other brokers' files).
+   WEB-30 (property specification), WEB-27 (collateral), WEB-29 (loan structure),
+   WEB-15 (brokers cannot open other brokers' files).
    Decisions: D5 (another broker's file looks exactly like an unknown ID),
    D7 (labelled placeholders for sections built in later stories). */
 
@@ -12,6 +13,8 @@ import { getApplication } from '../services/applicationService'
 import { RiskBadge, StatusBadge } from '../components/Badges'
 import { KeyFigure, PropertyCard, SectionPlaceholder } from '../components/LoanFileSections'
 import { EMPTY, formatBps, formatCents, formatDate, formatMultiple } from '../utils/format'
+import { CollateralCard } from '../components/CollateralCard'
+import { LoanStructureCard } from '../components/LoanStructureCard'
 
 const WAITING_FOR_AI = 'Waiting for AI assessment'
 
@@ -125,7 +128,10 @@ export function LoanFilePage() {
       </header>
 
       {/* Headline figures: the same values as the pipeline row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section
+        aria-label="Headline figures"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
         {/* TEMP(Q1-LOAN): note changes when the loan-amount field is agreed */}
         <KeyFigure
           label="Loan amount"
@@ -147,16 +153,12 @@ export function LoanFilePage() {
           value={formatBps(file.dtiBps)}
           note={hasAi ? null : WAITING_FOR_AI}
         />
-      </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left column */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <SectionPlaceholder
-            title="Collateral assessment"
-            story="WEB-27"
-            description="Seller's asking price compared with the ML valuation, the difference and LTV on each."
-          />
+          <CollateralCard collateral={file.collateral} />
           <SectionPlaceholder
             title="Debt-to-income breakdown"
             story="WEB-28"
@@ -167,11 +169,7 @@ export function LoanFilePage() {
         {/* Right column */}
         <div className="flex flex-col gap-6">
           <PropertyCard property={file.property} />
-          <SectionPlaceholder
-            title="Loan structure"
-            story="WEB-29"
-            description="Purchase price, deposit, loan requested, term, rate and monthly repayment."
-          />
+          <LoanStructureCard loanStructure={file.loanStructure} />
           <SectionPlaceholder
             title="Lifecycle"
             story="WEB-31"

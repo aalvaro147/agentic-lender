@@ -30,13 +30,15 @@ export function StatusBadge({ status }) {
   )
 }
 
-export function RiskBadge({ tier }) {
+// `suffix` adds words after the label, e.g. " risk" on the loan file → "Medium risk"
+export function RiskBadge({ tier, suffix = '' }) {
   // No AI assessment yet (decision D2): plain dash instead of an empty pill
   if (!tier) return <span className="text-muted">{EMPTY}</span>
 
   return (
     <span className={`${BASE} ${RISK_CLASSES[tier] ?? 'bg-page text-muted'}`}>
       {RISK_LABELS[tier] ?? tier}
+      {suffix}
     </span>
   )
 }

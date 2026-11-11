@@ -3,24 +3,96 @@
     "uid": "mock-underwriter-01",
     "email": "orla.hennessy@bank.example",
     "password": "password123",
-    "displayName": "Orla Hennessy",
     "role": "underwriter",
-    "brokerId": null
+    "displayName": "Orla Hennessy",
+    "createdAt": "2026-09-01T09:00:00Z"
   },
   {
     "uid": "mock-broker-01",
     "email": "ciaran.oneill@broker.example",
     "password": "password123",
-    "displayName": "Ciarán O'Neill",
     "role": "broker",
-    "brokerId": "broker-01"
+    "displayName": "Ciarán O'Neill",
+    "createdAt": "2026-09-01T09:00:00Z"
   },
   {
     "uid": "mock-broker-02",
     "email": "emma.byrne@broker.example",
     "password": "password123",
-    "displayName": "Emma Byrne",
     "role": "broker",
-    "brokerId": "broker-02"
+    "displayName": "Emma Byrne",
+    "createdAt": "2026-09-01T09:00:00Z"
+  },
+  {
+    "uid": "mock-broker-03",
+    "email": "sean.kelly@broker.example",
+    "password": "password123",
+    "role": "broker",
+    "displayName": "Seán Kelly",
+    "createdAt": "2026-09-01T09:00:00Z"
+  },
+  {
+    "uid": "mock-borrower-0148",
+    "email": "borrower-0148@borrower.example",
+    "role": "borrower",
+    "displayName": "Aoife Murphy",
+    "walletAddress": "0x1e5d63c50b9719432153495bfcdde1b674c26b99",
+    "createdAt": "2026-10-07T09:30:00Z"
+  },
+  {
+    "uid": "mock-borrower-0147",
+    "email": "borrower-0147@borrower.example",
+    "role": "borrower",
+    "displayName": "Tomasz Nowak",
+    "walletAddress": "0x78816b91ba09adbd5526415fef5008e49142b0ae",
+    "createdAt": "2026-10-06T14:10:00Z"
+  },
+  {
+    "uid": "mock-borrower-0146",
+    "email": "borrower-0146@borrower.example",
+    "role": "borrower",
+    "displayName": "Sinéad & Mark Brennan",
+    "walletAddress": "0x98e83d3f27752d24185ea67f8e2251ee9911cd1c",
+    "createdAt": "2026-10-06T11:00:00Z"
+  },
+  {
+    "uid": "mock-borrower-0145",
+    "email": "borrower-0145@borrower.example",
+    "role": "borrower",
+    "displayName": "Patrick Doyle",
+    "walletAddress": "0x41fd0cf67c0ea4b848a60b18834208a3282513e9",
+    "createdAt": "2026-09-17T10:20:00Z"
+  },
+  {
+    "uid": "mock-borrower-0144",
+    "email": "borrower-0144@borrower.example",
+    "role": "borrower",
+    "displayName": "Rachel Kinsella",
+    "walletAddress": "0x2b8e5888124bc2f2df9a974c0f9b193b5faf44fb",
+    "createdAt": "2026-10-02T16:45:00Z"
+  },
+  {
+    "uid": "mock-borrower-0143",
+    "email": "borrower-0143@borrower.example",
+    "role": "borrower",
+    "displayName": "Darragh Fitzgerald",
+    "walletAddress": "0xa8f0cc7b0bd62e19b9c46ae9f70a8ef083d64959",
+    "createdAt": "2026-09-01T09:00:00Z"
+  },
+  {
+    "uid": "mock-borrower-0142",
+    "email": "borrower-0142@borrower.example",
+    "role": "borrower",
+    "displayName": "Niamh Walsh",
+    "walletAddress": "0x362cbc90fa4a5041803d046e4eb4e2c0f68542e2",
+    "createdAt": "2026-10-05T12:30:00Z"
+  },
+  {
+    "uid": "mock-borrower-0149",
+    "email": "borrower-0149@borrower.example",
+    "role": "borrower",
+    "displayName": "Ciara Dunne",
+    "walletAddress": "0x8072f559fde69ffae59d01e2113db8965650c678",
+    "createdAt": "2026-10-08T10:15:00Z"
   }
 ]

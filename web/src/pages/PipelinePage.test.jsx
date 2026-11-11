@@ -5,18 +5,8 @@ import { AuthContext } from '../auth/AuthContext'
 import { PipelinePage } from './PipelinePage'
 import userEvent from '@testing-library/user-event'
 
-const orla = {
-  uid: 'mock-underwriter-01',
-  role: 'underwriter',
-  brokerId: null,
-  displayName: 'Orla Hennessy',
-}
-const ciaran = {
-  uid: 'mock-broker-01',
-  role: 'broker',
-  brokerId: 'broker-01',
-  displayName: "Ciarán O'Neill",
-}
+const orla = { uid: 'mock-underwriter-01', role: 'underwriter', displayName: 'Orla Hennessy' }
+const ciaran = { uid: 'mock-broker-01', role: 'broker', displayName: "Ciarán O'Neill" }
 
 function renderAs(profile) {
   return render(
@@ -48,7 +38,7 @@ describe('PipelinePage', () => {
 
     expect(screen.getByRole('heading', { name: 'Origination pipeline' })).toBeInTheDocument()
     expect(await screen.findByText('Tomasz Nowak')).toBeInTheDocument()
-    expect(screen.getAllByRole('row')).toHaveLength(8) // header + 7 applications
+    expect(screen.getAllByRole('row')).toHaveLength(9) // header + 8 applications
   })
 
   it('filters by status and shows the count (WEB-20)', async () => {
@@ -56,10 +46,10 @@ describe('PipelinePage', () => {
     renderAs(orla)
     await screen.findByText('Tomasz Nowak')
 
-    await user.selectOptions(screen.getByLabelText('Status'), 'applied')
+    await user.selectOptions(screen.getByLabelText('Status'), 'APPLIED')
 
     expect(dataRows()).toHaveLength(2)
-    expect(screen.getByText('Showing 2 of 7 applications')).toBeInTheDocument()
+    expect(screen.getByText('Showing 2 of 8 applications')).toBeInTheDocument()
   })
 
   it('filters by LTV band (WEB-21)', async () => {
@@ -69,8 +59,9 @@ describe('PipelinePage', () => {
 
     await user.selectOptions(screen.getByLabelText('LTV band'), 'over-90') // the "> 90%" option
 
-    expect(dataRows()).toHaveLength(1)
+    expect(dataRows()).toHaveLength(2)
     expect(screen.getByText('Rachel Kinsella')).toBeInTheDocument()
+    expect(screen.getByText('Ciara Dunne')).toBeInTheDocument()
   })
 
   it('combines risk tier with the status filter (WEB-22)', async () => {
@@ -126,6 +117,6 @@ describe('PipelinePage', () => {
     expect(screen.getByText('No applications match these filters.')).toBeInTheDocument()
 
     await user.click(screen.getAllByRole('button', { name: 'Clear filters' })[0])
-    expect(dataRows()).toHaveLength(7)
+    expect(dataRows()).toHaveLength(8)
   })
 })

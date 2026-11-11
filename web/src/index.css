@@ -25,6 +25,8 @@
   --color-status-funded: #0b5f68;
   --color-status-closed-bg: #dce1e8;
   --color-status-closed: #2e3744;
+  --color-status-rejected-bg: #fbe9e9;
+  --color-status-rejected: #a61b1b;
 
   /* Risk tier badges */
   --color-risk-low-bg: #e6f4ec;

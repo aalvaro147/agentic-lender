@@ -1,114 +1,517 @@
 [
   {
-    "id": "AL-2026-0148",
-    "borrowerName": "Aoife Murphy",
-    "location": "Ballincollig, Co. Cork",
-    "brokerId": "broker-01",
-    "brokerName": "Ciarán O'Neill",
-    "loanAmount": 342000,
-    "propertyValuation": 380000,
-    "annualIncome": 86000,
-    "ltv": 90.0,
-    "lti": 3.98,
-    "dti": 28.1,
-    "riskTier": "medium",
-    "status": "ai_deliberated",
-    "submittedAt": "2026-10-08"
+    "applicationId": "AL-2026-0148",
+    "borrowerId": "mock-borrower-0148",
+    "brokerId": "mock-broker-01",
+    "status": "AI_DELIBERATED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 8600000,
+      "existingDebtMinorUnits": 25000,
+      "depositMinorUnits": 5300000,
+      "requestedTermMonths": 360
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 39500000,
+      "berRating": "B2",
+      "county": "Cork",
+      "floorAreaSquareMetres": 110,
+      "bedrooms": 3,
+      "propertyType": "Semi-detached house"
+    },
+    "aiAssessment": {
+      "recommendation": "CONDITIONALLY_APPROVE",
+      "createdAt": "2026-10-08T10:30:00Z",
+      "isMock": true,
+      "modelVersion": "mock-0.2",
+      "valuation": {
+        "estimatedValueMinorUnits": 38315000,
+        "currency": "EUR",
+        "modelVersion": "mock-0.2",
+        "ltvBps": 8926
+      },
+      "affordability": {
+        "aprBps": 350,
+        "monthlyRepaymentMinorUnits": 153573,
+        "dtiBps": 2491,
+        "disposableSurplusMinorUnits": 538093,
+        "loanToIncomeMultiple": 3.98,
+        "stressTests": [
+          {
+            "rateIncreaseBps": 100,
+            "aprBps": 450,
+            "monthlyRepaymentMinorUnits": 173286,
+            "disposableSurplusMinorUnits": 518380
+          },
+          {
+            "rateIncreaseBps": 200,
+            "aprBps": 550,
+            "monthlyRepaymentMinorUnits": 194184,
+            "disposableSurplusMinorUnits": 497482
+          },
+          {
+            "rateIncreaseBps": 300,
+            "aprBps": 650,
+            "monthlyRepaymentMinorUnits": 216167,
+            "disposableSurplusMinorUnits": 475499
+          }
+        ],
+        "assumptions": [
+          "Base APR 350 bps (mock assumption).",
+          "BER A1-A3 discount of 25 bps applied.",
+          "DTI = (new repayment + existing debt) / net monthly income.",
+          "Surplus = income - expenses - existing debt - repayment.",
+          "Borrowing cap and LTV limits are placeholders, not regulatory rules."
+        ]
+      },
+      "creditMemo": "MOCK credit memo. Qualitative assessment for human underwriter review. Recommendation: CONDITIONALLY_APPROVE (LTV above conditional threshold). Loan EUR 342,000.00 over 360 months at 3.50% APR; repayment EUR 1,535.73/month; LTV 89.26%; DTI 24.91%; disposable surplus EUR 5,380.93/month.",
+      "warnings": ["MOCK OUTPUT: not a real valuation or lending decision."]
+    },
+    "createdAt": "2026-10-08T09:30:00Z",
+    "updatedAt": "2026-10-08T10:30:00Z"
   },
   {
-    "id": "AL-2026-0147",
-    "borrowerName": "Tomasz Nowak",
-    "location": "Galway City",
-    "brokerId": "broker-02",
-    "brokerName": "Emma Byrne",
-    "loanAmount": 268000,
-    "propertyValuation": 335000,
-    "annualIncome": 92000,
-    "ltv": 80.0,
-    "lti": 2.91,
-    "dti": 19.6,
-    "riskTier": "low",
-    "status": "underwriter_approved",
-    "submittedAt": "2026-10-07"
+    "applicationId": "AL-2026-0147",
+    "borrowerId": "mock-borrower-0147",
+    "brokerId": "mock-broker-02",
+    "status": "UNDERWRITER_APPROVED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 9200000,
+      "existingDebtMinorUnits": 0,
+      "depositMinorUnits": 6700000,
+      "requestedTermMonths": 360
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 33500000,
+      "berRating": "A2",
+      "county": "Galway",
+      "floorAreaSquareMetres": 78,
+      "bedrooms": 2,
+      "propertyType": "Apartment"
+    },
+    "aiAssessment": {
+      "recommendation": "CONDITIONALLY_APPROVE",
+      "createdAt": "2026-10-07T15:10:00Z",
+      "isMock": true,
+      "modelVersion": "mock-0.2",
+      "valuation": {
+        "estimatedValueMinorUnits": 32495000,
+        "currency": "EUR",
+        "modelVersion": "mock-0.2",
+        "ltvBps": 8247
+      },
+      "affordability": {
+        "aprBps": 325,
+        "monthlyRepaymentMinorUnits": 116635,
+        "dtiBps": 1521,
+        "disposableSurplusMinorUnits": 650031,
+        "loanToIncomeMultiple": 2.91,
+        "stressTests": [
+          {
+            "rateIncreaseBps": 100,
+            "aprBps": 425,
+            "monthlyRepaymentMinorUnits": 131840,
+            "disposableSurplusMinorUnits": 634826
+          },
+          {
+            "rateIncreaseBps": 200,
+            "aprBps": 525,
+            "monthlyRepaymentMinorUnits": 147991,
+            "disposableSurplusMinorUnits": 618675
+          },
+          {
+            "rateIncreaseBps": 300,
+            "aprBps": 625,
+            "monthlyRepaymentMinorUnits": 165012,
+            "disposableSurplusMinorUnits": 601654
+          }
+        ],
+        "assumptions": [
+          "Base APR 350 bps (mock assumption).",
+          "BER A1-A3 discount of 25 bps applied.",
+          "DTI = (new repayment + existing debt) / net monthly income.",
+          "Surplus = income - expenses - existing debt - repayment.",
+          "Borrowing cap and LTV limits are placeholders, not regulatory rules."
+        ]
+      },
+      "creditMemo": "MOCK credit memo. Qualitative assessment for human underwriter review. Recommendation: CONDITIONALLY_APPROVE (LTV above conditional threshold). Loan EUR 268,000.00 over 360 months at 3.25% APR; repayment EUR 1,166.35/month; LTV 82.47%; DTI 15.21%; disposable surplus EUR 6,500.31/month.",
+      "warnings": ["MOCK OUTPUT: not a real valuation or lending decision."]
+    },
+    "underwriterApproval": {
+      "approvedBy": "mock-underwriter-01",
+      "approvedAt": "2026-10-09T14:10:00Z",
+      "auditHash": "0x37ce541f766e00703c2db6285cc5a763bbdd19ef4262999bbe27a4e4f1ec4153"
+    },
+    "blockchainTx": {
+      "status": "CONFIRMED",
+      "auditHash": "0x37ce541f766e00703c2db6285cc5a763bbdd19ef4262999bbe27a4e4f1ec4153",
+      "chainId": 31337,
+      "applicationIdHash": "0xdb5e51ad70fdf100653c9bffe5084ee81498ebdf22724ea14a402c473921d573",
+      "tokenId": "2",
+      "auditTxHash": "0x1b76851b690fddb24f3da855bbc1f460411d2a5b82d479dc50cdcc510063bf45",
+      "loanTxHash": "0xdde3359b309397a10e75ab989c950baf8d14a7b6365d6d9a2906e8edac4e71c6",
+      "blockNumber": 101
+    },
+    "createdAt": "2026-10-07T14:10:00Z",
+    "updatedAt": "2026-10-09T14:10:00Z"
   },
   {
-    "id": "AL-2026-0146",
-    "borrowerName": "Sinéad & Mark Brennan",
-    "location": "Swords, Co. Dublin",
-    "brokerId": "broker-02",
-    "brokerName": "Emma Byrne",
-    "loanAmount": 472500,
-    "propertyValuation": 525000,
-    "annualIncome": 118000,
-    "ltv": 90.0,
-    "lti": 4.0,
-    "dti": 28.8,
-    "riskTier": "medium",
-    "status": "applied",
-    "submittedAt": "2026-10-07"
+    "applicationId": "AL-2026-0146",
+    "borrowerId": "mock-borrower-0146",
+    "brokerId": "mock-broker-02",
+    "status": "APPLIED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 11800000,
+      "existingDebtMinorUnits": 40000,
+      "depositMinorUnits": 5250000,
+      "requestedTermMonths": 360
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 52500000,
+      "berRating": "B3",
+      "county": "Dublin",
+      "floorAreaSquareMetres": 165,
+      "bedrooms": 4,
+      "propertyType": "Detached house"
+    },
+    "createdAt": "2026-10-07T11:00:00Z",
+    "updatedAt": "2026-10-07T11:00:00Z"
   },
   {
-    "id": "AL-2026-0145",
-    "borrowerName": "Patrick Doyle",
-    "location": "Limerick City",
-    "brokerId": "broker-01",
-    "brokerName": "Ciarán O'Neill",
-    "loanAmount": 215000,
-    "propertyValuation": 305000,
-    "annualIncome": 74000,
-    "ltv": 70.5,
-    "lti": 2.91,
-    "dti": 19.3,
-    "riskTier": "low",
-    "status": "funded",
-    "submittedAt": "2026-09-18"
+    "applicationId": "AL-2026-0145",
+    "borrowerId": "mock-borrower-0145",
+    "brokerId": "mock-broker-01",
+    "status": "FUNDED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 7400000,
+      "existingDebtMinorUnits": 15000,
+      "depositMinorUnits": 9000000,
+      "requestedTermMonths": 300
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 30500000,
+      "berRating": "C1",
+      "county": "Limerick",
+      "floorAreaSquareMetres": 95,
+      "bedrooms": 3,
+      "propertyType": "Terraced house"
+    },
+    "aiAssessment": {
+      "recommendation": "APPROVE",
+      "createdAt": "2026-09-18T11:20:00Z",
+      "isMock": true,
+      "modelVersion": "mock-0.2",
+      "valuation": {
+        "estimatedValueMinorUnits": 29585000,
+        "currency": "EUR",
+        "modelVersion": "mock-0.2",
+        "ltvBps": 7267
+      },
+      "affordability": {
+        "aprBps": 350,
+        "monthlyRepaymentMinorUnits": 107634,
+        "dtiBps": 1988,
+        "disposableSurplusMinorUnits": 494032,
+        "loanToIncomeMultiple": 2.91,
+        "stressTests": [
+          {
+            "rateIncreaseBps": 100,
+            "aprBps": 450,
+            "monthlyRepaymentMinorUnits": 119504,
+            "disposableSurplusMinorUnits": 482162
+          },
+          {
+            "rateIncreaseBps": 200,
+            "aprBps": 550,
+            "monthlyRepaymentMinorUnits": 132029,
+            "disposableSurplusMinorUnits": 469637
+          },
+          {
+            "rateIncreaseBps": 300,
+            "aprBps": 650,
+            "monthlyRepaymentMinorUnits": 145170,
+            "disposableSurplusMinorUnits": 456496
+          }
+        ],
+        "assumptions": [
+          "Base APR 350 bps (mock assumption).",
+          "BER A1-A3 discount of 25 bps applied.",
+          "DTI = (new repayment + existing debt) / net monthly income.",
+          "Surplus = income - expenses - existing debt - repayment.",
+          "Borrowing cap and LTV limits are placeholders, not regulatory rules."
+        ]
+      },
+      "creditMemo": "MOCK credit memo. Qualitative assessment for human underwriter review. Recommendation: APPROVE (all placeholder checks passed). Loan EUR 215,000.00 over 300 months at 3.50% APR; repayment EUR 1,076.34/month; LTV 72.67%; DTI 19.88%; disposable surplus EUR 4,940.32/month.",
+      "warnings": ["MOCK OUTPUT: not a real valuation or lending decision."]
+    },
+    "underwriterApproval": {
+      "approvedBy": "mock-underwriter-01",
+      "approvedAt": "2026-09-20T10:20:00Z",
+      "auditHash": "0x6c6ae9b4c76043f84c04819f6a63760ff0dbcb84d3d603644ec824e97edeb564"
+    },
+    "blockchainTx": {
+      "status": "CONFIRMED",
+      "auditHash": "0x6c6ae9b4c76043f84c04819f6a63760ff0dbcb84d3d603644ec824e97edeb564",
+      "chainId": 31337,
+      "applicationIdHash": "0xf58fc62f858f5dcd856193493ed570e2b4efe9ba85adebfe1f1a333273e910f0",
+      "tokenId": "4",
+      "auditTxHash": "0xb0dbb87cbed11f88e2771a105ef662f4f4e88469851426be2bfc5573d3d2ecb6",
+      "loanTxHash": "0xeaa6323adf48bd0511b737469de49bef25eb0eaf70ac1756e717df7df988024a",
+      "blockNumber": 103
+    },
+    "createdAt": "2026-09-18T10:20:00Z",
+    "updatedAt": "2026-09-20T10:20:00Z"
   },
   {
-    "id": "AL-2026-0144",
-    "borrowerName": "Rachel Kinsella",
-    "location": "Bray, Co. Wicklow",
-    "brokerId": "broker-03",
-    "brokerName": "Seán Kelly",
-    "loanAmount": 398000,
-    "propertyValuation": 420000,
-    "annualIncome": 79000,
-    "ltv": 94.8,
-    "lti": 5.04,
-    "dti": 38.8,
-    "riskTier": "high",
-    "status": "ai_deliberated",
-    "submittedAt": "2026-10-03"
+    "applicationId": "AL-2026-0144",
+    "borrowerId": "mock-borrower-0144",
+    "brokerId": "mock-broker-03",
+    "status": "AI_DELIBERATED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 7900000,
+      "existingDebtMinorUnits": 60000,
+      "depositMinorUnits": 2200000,
+      "requestedTermMonths": 360
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 42000000,
+      "berRating": "C2",
+      "county": "Wicklow",
+      "floorAreaSquareMetres": 105,
+      "bedrooms": 3,
+      "propertyType": "Semi-detached house"
+    },
+    "aiAssessment": {
+      "recommendation": "DECLINE",
+      "createdAt": "2026-10-03T17:45:00Z",
+      "isMock": true,
+      "modelVersion": "mock-0.2",
+      "valuation": {
+        "estimatedValueMinorUnits": 40740000,
+        "currency": "EUR",
+        "modelVersion": "mock-0.2",
+        "ltvBps": 9769
+      },
+      "affordability": {
+        "aprBps": 350,
+        "monthlyRepaymentMinorUnits": 178720,
+        "dtiBps": 3626,
+        "disposableSurplusMinorUnits": 419613,
+        "loanToIncomeMultiple": 5.04,
+        "stressTests": [
+          {
+            "rateIncreaseBps": 100,
+            "aprBps": 450,
+            "monthlyRepaymentMinorUnits": 201661,
+            "disposableSurplusMinorUnits": 396672
+          },
+          {
+            "rateIncreaseBps": 200,
+            "aprBps": 550,
+            "monthlyRepaymentMinorUnits": 225980,
+            "disposableSurplusMinorUnits": 372353
+          },
+          {
+            "rateIncreaseBps": 300,
+            "aprBps": 650,
+            "monthlyRepaymentMinorUnits": 251563,
+            "disposableSurplusMinorUnits": 346770
+          }
+        ],
+        "assumptions": [
+          "Base APR 350 bps (mock assumption).",
+          "BER A1-A3 discount of 25 bps applied.",
+          "DTI = (new repayment + existing debt) / net monthly income.",
+          "Surplus = income - expenses - existing debt - repayment.",
+          "Borrowing cap and LTV limits are placeholders, not regulatory rules."
+        ]
+      },
+      "creditMemo": "MOCK credit memo. Qualitative assessment for human underwriter review. Recommendation: DECLINE (loan-to-income 5.04x above placeholder cap; LTV above placeholder maximum). Loan EUR 398,000.00 over 360 months at 3.50% APR; repayment EUR 1,787.20/month; LTV 97.69%; DTI 36.26%; disposable surplus EUR 4,196.13/month.",
+      "warnings": ["MOCK OUTPUT: not a real valuation or lending decision."]
+    },
+    "createdAt": "2026-10-03T16:45:00Z",
+    "updatedAt": "2026-10-03T17:45:00Z"
   },
   {
-    "id": "AL-2026-0143",
-    "borrowerName": "Darragh Fitzgerald",
-    "location": "Kilkenny City",
-    "brokerId": "broker-03",
-    "brokerName": "Seán Kelly",
-    "loanAmount": 186000,
-    "propertyValuation": 248000,
-    "annualIncome": 71000,
-    "ltv": 75.0,
-    "lti": 2.62,
-    "dti": 14.7,
-    "riskTier": "low",
-    "status": "closed",
-    "submittedAt": "2026-09-02"
+    "applicationId": "AL-2026-0143",
+    "borrowerId": "mock-borrower-0143",
+    "brokerId": "mock-broker-03",
+    "status": "CLOSED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 7100000,
+      "existingDebtMinorUnits": 0,
+      "depositMinorUnits": 6200000,
+      "requestedTermMonths": 300
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 24800000,
+      "berRating": "A3",
+      "county": "Kilkenny",
+      "floorAreaSquareMetres": 120,
+      "bedrooms": 3,
+      "propertyType": "Bungalow"
+    },
+    "aiAssessment": {
+      "recommendation": "APPROVE",
+      "createdAt": "2026-09-02T10:00:00Z",
+      "isMock": true,
+      "modelVersion": "mock-0.2",
+      "valuation": {
+        "estimatedValueMinorUnits": 24056000,
+        "currency": "EUR",
+        "modelVersion": "mock-0.2",
+        "ltvBps": 7732
+      },
+      "affordability": {
+        "aprBps": 325,
+        "monthlyRepaymentMinorUnits": 90641,
+        "dtiBps": 1531,
+        "disposableSurplusMinorUnits": 501025,
+        "loanToIncomeMultiple": 2.62,
+        "stressTests": [
+          {
+            "rateIncreaseBps": 100,
+            "aprBps": 425,
+            "monthlyRepaymentMinorUnits": 100763,
+            "disposableSurplusMinorUnits": 490903
+          },
+          {
+            "rateIncreaseBps": 200,
+            "aprBps": 525,
+            "monthlyRepaymentMinorUnits": 111460,
+            "disposableSurplusMinorUnits": 480206
+          },
+          {
+            "rateIncreaseBps": 300,
+            "aprBps": 625,
+            "monthlyRepaymentMinorUnits": 122699,
+            "disposableSurplusMinorUnits": 468967
+          }
+        ],
+        "assumptions": [
+          "Base APR 350 bps (mock assumption).",
+          "BER A1-A3 discount of 25 bps applied.",
+          "DTI = (new repayment + existing debt) / net monthly income.",
+          "Surplus = income - expenses - existing debt - repayment.",
+          "Borrowing cap and LTV limits are placeholders, not regulatory rules."
+        ]
+      },
+      "creditMemo": "MOCK credit memo. Qualitative assessment for human underwriter review. Recommendation: APPROVE (all placeholder checks passed). Loan EUR 186,000.00 over 300 months at 3.25% APR; repayment EUR 906.41/month; LTV 77.32%; DTI 15.31%; disposable surplus EUR 5,010.25/month.",
+      "warnings": ["MOCK OUTPUT: not a real valuation or lending decision."]
+    },
+    "underwriterApproval": {
+      "approvedBy": "mock-underwriter-01",
+      "approvedAt": "2026-09-04T09:00:00Z",
+      "auditHash": "0x110f04a6500919da20ec456aec1eb2bf79d40b2a08504c5fdd096b0287635984"
+    },
+    "blockchainTx": {
+      "status": "CONFIRMED",
+      "auditHash": "0x110f04a6500919da20ec456aec1eb2bf79d40b2a08504c5fdd096b0287635984",
+      "chainId": 31337,
+      "applicationIdHash": "0x5d5b7c27fa7fbebcba58b43417513c2b955d58376e428dd9e49d8b9dc5daaf16",
+      "tokenId": "6",
+      "auditTxHash": "0xae02d697f59f7697e5bb18547121313d171bc562a172b6979c6935d7d1f678c2",
+      "loanTxHash": "0xca1b6a12c45a223ef74c25e01d06b1a5b1c01e7ec309a121af1891ebd809dda9",
+      "blockNumber": 105
+    },
+    "createdAt": "2026-09-02T09:00:00Z",
+    "updatedAt": "2026-09-04T09:00:00Z"
   },
   {
-    "id": "AL-2026-0142",
-    "borrowerName": "Niamh Walsh",
-    "location": "Waterford City",
-    "brokerId": "broker-01",
-    "brokerName": "Ciarán O'Neill",
-    "loanAmount": 254700,
-    "propertyValuation": 283000,
-    "annualIncome": 68000,
-    "ltv": 90.0,
-    "lti": 3.75,
-    "dti": 26.4,
-    "riskTier": "medium",
-    "status": "applied",
-    "submittedAt": "2026-10-06"
+    "applicationId": "AL-2026-0142",
+    "borrowerId": "mock-borrower-0142",
+    "brokerId": "mock-broker-01",
+    "status": "APPLIED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 6800000,
+      "existingDebtMinorUnits": 20000,
+      "depositMinorUnits": 2830000,
+      "requestedTermMonths": 360
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 28300000,
+      "berRating": "B1",
+      "county": "Waterford",
+      "floorAreaSquareMetres": 72,
+      "bedrooms": 2,
+      "propertyType": "Apartment"
+    },
+    "createdAt": "2026-10-06T12:30:00Z",
+    "updatedAt": "2026-10-06T12:30:00Z"
+  },
+  {
+    "applicationId": "AL-2026-0149",
+    "borrowerId": "mock-borrower-0149",
+    "brokerId": "mock-broker-03",
+    "status": "REJECTED",
+    "financialSpecs": {
+      "grossIncomeMinorUnits": 6000000,
+      "existingDebtMinorUnits": 35000,
+      "depositMinorUnits": 3500000,
+      "requestedTermMonths": 360
+    },
+    "propertySpecs": {
+      "askingPriceMinorUnits": 34500000,
+      "berRating": "D1",
+      "county": "Meath",
+      "floorAreaSquareMetres": 100,
+      "bedrooms": 3,
+      "propertyType": "Semi-detached house"
+    },
+    "aiAssessment": {
+      "recommendation": "DECLINE",
+      "createdAt": "2026-10-09T11:15:00Z",
+      "isMock": true,
+      "modelVersion": "mock-0.2",
+      "valuation": {
+        "estimatedValueMinorUnits": 33465000,
+        "currency": "EUR",
+        "modelVersion": "mock-0.2",
+        "ltvBps": 9263
+      },
+      "affordability": {
+        "aprBps": 350,
+        "monthlyRepaymentMinorUnits": 139204,
+        "dtiBps": 3484,
+        "disposableSurplusMinorUnits": 325796,
+        "loanToIncomeMultiple": 5.17,
+        "stressTests": [
+          {
+            "rateIncreaseBps": 100,
+            "aprBps": 450,
+            "monthlyRepaymentMinorUnits": 157072,
+            "disposableSurplusMinorUnits": 307928
+          },
+          {
+            "rateIncreaseBps": 200,
+            "aprBps": 550,
+            "monthlyRepaymentMinorUnits": 176015,
+            "disposableSurplusMinorUnits": 288985
+          },
+          {
+            "rateIncreaseBps": 300,
+            "aprBps": 650,
+            "monthlyRepaymentMinorUnits": 195941,
+            "disposableSurplusMinorUnits": 269059
+          }
+        ],
+        "assumptions": [
+          "Base APR 350 bps (mock assumption).",
+          "BER A1-A3 discount of 25 bps applied.",
+          "DTI = (new repayment + existing debt) / net monthly income.",
+          "Surplus = income - expenses - existing debt - repayment.",
+          "Borrowing cap and LTV limits are placeholders, not regulatory rules."
+        ]
+      },
+      "creditMemo": "MOCK credit memo. Qualitative assessment for human underwriter review. Recommendation: DECLINE (loan-to-income 5.17x above placeholder cap; LTV above placeholder maximum). Loan EUR 310,000.00 over 360 months at 3.50% APR; repayment EUR 1,392.04/month; LTV 92.63%; DTI 34.84%; disposable surplus EUR 3,257.96/month.",
+      "warnings": ["MOCK OUTPUT: not a real valuation or lending decision."]
+    },
+    "underwriterDecision": {
+      "decision": "REJECTED",
+      "rejectedBy": "mock-underwriter-01",
+      "rejectedAt": "2026-10-11T10:15:00Z",
+      "rejectionHash": "0xb67238a6a5be84c27658d3d27c524a597f2dc1cf1d56c941bd74a848d64fd32b"
+    },
+    "createdAt": "2026-10-09T10:15:00Z",
+    "updatedAt": "2026-10-11T10:15:00Z"
   }
 ]

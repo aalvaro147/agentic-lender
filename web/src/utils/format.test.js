@@ -1,15 +1,7 @@
 /* WEB-08: formatters for AL-Core units (cents, basis points) */
 
 import { describe, expect, it } from 'vitest'
-import {
-  EMPTY,
-  formatBps,
-  formatCents,
-  formatDate,
-  formatEuro,
-  formatMultiple,
-  formatPercent,
-} from './format'
+import { EMPTY, formatBps, formatCents, formatDate, formatMultiple, formatPercent } from './format'
 
 describe('formatCents', () => {
   it('turns cents into whole euros', () => {
@@ -34,10 +26,8 @@ describe('formatBps', () => {
   })
 })
 
-// TEMP(OLD-MOCKS): drop the formatEuro line when formatEuro is removed (WEB-08 step 4)
 describe('existing formatters still work', () => {
-  it('formats euros, percentages, multiples and dates', () => {
-    expect(formatEuro(342000)).toBe('€342,000')
+  it('formats percentages, multiples and dates', () => {
     expect(formatPercent(90)).toBe('90.0%')
     expect(formatMultiple(3.98)).toBe('3.98×')
     expect(formatDate('2026-10-08')).toBe('08 Oct 2026')
@@ -50,7 +40,7 @@ describe('existing formatters still work', () => {
 
 describe('missing values', () => {
   it('shows a dash instead of crashing or printing 0', () => {
-    for (const formatter of [formatCents, formatBps, formatEuro, formatPercent, formatMultiple]) {
+    for (const formatter of [formatCents, formatBps, formatPercent, formatMultiple]) {
       expect(formatter(null)).toBe(EMPTY)
       expect(formatter(undefined)).toBe(EMPTY)
     }

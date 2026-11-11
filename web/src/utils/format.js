@@ -26,11 +26,6 @@ const shortDate = new Intl.DateTimeFormat('en-IE', {
 
 /* ----------------------- MONEY ----------------------- */
 
-// Whole euros: 342000 → €342,000
-// TEMP(OLD-MOCKS): only the old euro-based mock fields use this. Remove in WEB-08 step 4,
-// once the pipeline reads AL-Core cents through formatCents.
-export const formatEuro = (amount) => (isMissing(amount) ? EMPTY : euro.format(amount))
-
 // Cents from AL-Core: 34200000 → €342,000 (rounded to the nearest euro)
 export const formatCents = (minorUnits) =>
   isMissing(minorUnits) ? EMPTY : euro.format(minorUnits / 100)

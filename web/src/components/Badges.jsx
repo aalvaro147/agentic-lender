@@ -3,15 +3,17 @@
    it can find as complete strings in the source code. */
 
 import { RISK_LABELS, STATUS_LABELS } from '../utils/statuses'
+import { EMPTY } from '../utils/format'
 
 const BASE = 'inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold'
 
 const STATUS_CLASSES = {
-  applied: 'bg-status-applied-bg text-status-applied',
-  ai_deliberated: 'bg-status-deliberated-bg text-status-deliberated',
-  underwriter_approved: 'bg-status-approved-bg text-status-approved',
-  funded: 'bg-status-funded-bg text-status-funded',
-  closed: 'bg-status-closed-bg text-status-closed',
+  APPLIED: 'bg-status-applied-bg text-status-applied',
+  AI_DELIBERATED: 'bg-status-deliberated-bg text-status-deliberated',
+  UNDERWRITER_APPROVED: 'bg-status-approved-bg text-status-approved',
+  FUNDED: 'bg-status-funded-bg text-status-funded',
+  CLOSED: 'bg-status-closed-bg text-status-closed',
+  REJECTED: 'bg-status-rejected-bg text-status-rejected',
 }
 
 const RISK_CLASSES = {
@@ -29,6 +31,9 @@ export function StatusBadge({ status }) {
 }
 
 export function RiskBadge({ tier }) {
+  // No AI assessment yet (decision D2): plain dash instead of an empty pill
+  if (!tier) return <span className="text-muted">{EMPTY}</span>
+
   return (
     <span className={`${BASE} ${RISK_CLASSES[tier] ?? 'bg-page text-muted'}`}>
       {RISK_LABELS[tier] ?? tier}

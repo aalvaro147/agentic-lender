@@ -2,7 +2,7 @@
   Underwriters see every application; brokers see only their referred clients,
   because getApplications() filters by the signed-in profile.
   Stories: WEB-15, WEB-18, WEB-19, WEB-25 (summary cards),
-  WEB-20 / 21 / 22 (filters), WEB-23 (search + sort) */
+  WEB-20 / 21 / 22 (filters), WEB-23 (search + sort), WEB-08 (AL-Core data shape) */
 
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router'
@@ -11,7 +11,7 @@ import { ROLES } from '../auth/roles'
 import { getApplications } from '../services/applicationService'
 import { RiskBadge, StatusBadge } from '../components/Badges'
 import { STATUS_LABELS } from '../utils/statuses'
-import { formatDate, formatEuro, formatMultiple, formatPercent } from '../utils/format'
+import { EMPTY, formatBps, formatCents, formatDate, formatMultiple } from '../utils/format'
 import { PipelineFilters } from '../components/PipelineFilters'
 import { SortableHeader } from '../components/SortableHeader'
 import {
@@ -39,9 +39,8 @@ export function PipelinePage() {
 
     getApplications(profile)
       .then((data) => {
+        // FLT-02: set once, and only while still mounted (DEFAULT_SORT orders the rows)
         if (!cancelled) setApplications(data)
-        // newest first (ISO dates sort correctly as text
-        setApplications([...data].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)))
       })
       .catch(() => {
         if (!cancelled) setError('Could not load applications. Please try again later.')
@@ -96,7 +95,7 @@ export function PipelinePage() {
       </header>
 
       {/* Status summary cards (WEB-25) */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {Object.entries(STATUS_LABELS).map(([code, label]) => (
           <div key={code} className="rounded-lg border border-line bg-white px-4 py-3">
             <p className="text-sm text-muted">{label}</p>
@@ -154,13 +153,13 @@ export function PipelinePage() {
                     )}
                     <SortableHeader
                       label="Loan"
-                      column="loanAmount"
+                      column="loanAmountMinorUnits"
                       align="right"
                       {...headerProps}
                     />
-                    <SortableHeader label="LTV" column="ltv" align="right" {...headerProps} />
+                    <SortableHeader label="LTV" column="ltvBps" align="right" {...headerProps} />
                     <SortableHeader label="LTI" column="lti" align="right" {...headerProps} />
-                    <SortableHeader label="DTI" column="dti" align="right" {...headerProps} />
+                    <SortableHeader label="DTI" column="dtiBps" align="right" {...headerProps} />
                     <SortableHeader label="Risk" column="riskTier" {...headerProps} />
                     <SortableHeader label="Status" column="status" {...headerProps} />
                     <SortableHeader label="Submitted" column="submittedAt" {...headerProps} />
@@ -178,14 +177,16 @@ export function PipelinePage() {
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium">{app.borrowerName}</p>
-                        <p className="text-xs text-muted">{app.location}</p>
+                        <p className="font-medium">{app.borrowerName ?? EMPTY}</p>
+                        <p className="text-xs text-muted">{app.location ?? EMPTY}</p>
                       </td>
-                      {!isBroker && <td className="px-4 py-3">{app.brokerName}</td>}
-                      <td className="px-4 py-3 text-right">{formatEuro(app.loanAmount)}</td>
-                      <td className="px-4 py-3 text-right">{formatPercent(app.ltv)}</td>
+                      {!isBroker && <td className="px-4 py-3">{app.brokerName ?? EMPTY}</td>}
+                      <td className="px-4 py-3 text-right">
+                        {formatCents(app.loanAmountMinorUnits)}
+                      </td>
+                      <td className="px-4 py-3 text-right">{formatBps(app.ltvBps)}</td>
                       <td className="px-4 py-3 text-right">{formatMultiple(app.lti)}</td>
-                      <td className="px-4 py-3 text-right">{formatPercent(app.dti)}</td>
+                      <td className="px-4 py-3 text-right">{formatBps(app.dtiBps)}</td>
                       <td className="px-4 py-3">
                         <RiskBadge tier={app.riskTier} />
                       </td>
@@ -202,9 +203,10 @@ export function PipelinePage() {
         </>
       )}
 
+      {/* TEMP(Q1-LOAN): update this note when the loan-amount field is agreed */}
       <p className="text-xs text-muted">
-        LTV = loan ÷ property valuation · LTI = loan ÷ gross annual income · DTI = monthly debt
-        repayments ÷ gross monthly income.
+        LTV, LTI, DTI and risk come from the AI assessment and show “—” until the AI has run. Loan =
+        asking price - deposit (provisional, pending the group data contract).
       </p>
     </div>
   )

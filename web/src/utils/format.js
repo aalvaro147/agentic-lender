@@ -30,6 +30,15 @@ const shortDate = new Intl.DateTimeFormat('en-IE', {
 export const formatCents = (minorUnits) =>
   isMissing(minorUnits) ? EMPTY : euro.format(minorUnits / 100)
 
+// Difference with a sign (WEB-27): 1185000 -> +€11,850, -1185000 -> -€11,850, 0 -> €0
+export const formatSignedCents = (minorUnits) => {
+  if (isMissing(minorUnits)) return EMPTY
+  const amount = formatCents(Math.abs(minorUnits))
+  if (minorUnits > 0) return `+${amount}`
+  if (minorUnits < 0) return `-${amount}`
+  return amount
+}
+
 /* ----------------------- RATES AND RATIOS ----------------------- */
 
 // Percent value: 90 → 90.0%
@@ -42,6 +51,18 @@ export const formatBps = (bps, decimals = 1) =>
 
 // Multiple: 3.98 → 3.98×
 export const formatMultiple = (value) => (isMissing(value) ? EMPTY : `${value.toFixed(2)}\u00D7`)
+
+// Loan term (WEB-29): 360 -> "30 years", 306 -> "25 years 6 months", 1 -> "1 month"
+export const formatTerm = (months) => {
+  if (isMissing(months)) return EMPTY
+  const years = Math.floor(months / 12)
+  const rest = months % 12
+  const parts = []
+  if (years) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`)
+  if (rest) parts.push(`${rest} ${rest === 1 ? 'month' : 'months'}`)
+  return parts.join(' ')
+}
+
 /* ----------------------- PROPERTY ----------------------- */
 
 // Floor area: 110 → 110 m² (WEB-30)

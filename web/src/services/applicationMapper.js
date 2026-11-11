@@ -86,15 +86,39 @@ export function toPipelineRow(doc, usersById = {}) {
  */
 export function toLoanFile(doc, usersById = {}) {
   const spec = doc.propertySpecs ?? {}
+  const finance = doc.financialSpecs ?? {}
+  const ai = doc.aiAssessment ?? null
+  const row = toPipelineRow(doc, usersById)
 
   return {
-    ...toPipelineRow(doc, usersById),
+    ...row,
     property: {
       location: toLocation(spec.county),
       propertyType: spec.propertyType ?? null,
       bedrooms: spec.bedrooms ?? null,
       floorAreaSquareMetres: spec.floorAreaSquareMetres ?? null,
       berRating: spec.berRating ?? null,
+    },
+
+    // WEB-27: asking price vs the AI's valuation (valuation fields null until AI_DELIBERATED)
+    collateral: {
+      askingPriceMinorUnits: spec.askingPriceMinorUnits ?? null,
+      valuationMinorUnits: ai?.valuation?.estimatedValueMinorUnits ?? null,
+      valuationModelVersion: ai?.valuation?.modelVersion ?? null,
+      isMockValuation: ai?.isMock === true,
+      ltvBps: row.ltvBps,
+    },
+
+    // WEB-29: how the purchase is funded
+    loanStructure: {
+      purchasePriceMinorUnits: spec.askingPriceMinorUnits ?? null,
+      depositMinorUnits: finance.depositMinorUnits ?? null,
+      loanAmountMinorUnits: row.loanAmountMinorUnits, // TEMP(Q1-LOAN): see toLoanAmount()
+      termMonths: finance.requestedTermMonths ?? null,
+      // TEMP(AI-FIELDS): names from the AI engine mock-0.2; aprBps already includes
+      // any BER discount (D11)
+      aprBps: ai?.affordability?.aprBps ?? null,
+      monthlyRepaymentMinorUnits: ai?.affordability?.monthlyRepaymentMinorUnits ?? null,
     },
   }
 }

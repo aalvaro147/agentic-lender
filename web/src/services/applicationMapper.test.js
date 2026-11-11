@@ -158,3 +158,36 @@ describe('toLoanFile (WEB-26, WEB-30)', () => {
     })
   })
 })
+
+describe('toLoanFile collateral and loan structure (WEB-27, WEB-29)', () => {
+  it('maps asking price, valuation and AI LTV for an assessed application', () => {
+    expect(toLoanFile(DELIBERATED, USERS).collateral).toEqual({
+      askingPriceMinorUnits: 38000000,
+      valuationMinorUnits: 36860000,
+      valuationModelVersion: null,
+      isMockValuation: false,
+      ltvBps: 9278,
+    })
+  })
+
+  it('maps the loan structure, leaving AI figures null when the AI did not send them', () => {
+    expect(toLoanFile(DELIBERATED, USERS).loanStructure).toEqual({
+      purchasePriceMinorUnits: 38000000,
+      depositMinorUnits: 3800000,
+      loanAmountMinorUnits: 34200000,
+      termMonths: 360,
+      aprBps: null,
+      monthlyRepaymentMinorUnits: null,
+    })
+  })
+
+  it('has no valuation, LTV, rate or repayment before the AI has run (D10)', () => {
+    const file = toLoanFile(APPLIED)
+    expect(file.collateral).toMatchObject({
+      askingPriceMinorUnits: 30000000,
+      valuationMinorUnits: null,
+      ltvBps: null,
+    })
+    expect(file.loanStructure).toMatchObject({ aprBps: null, monthlyRepaymentMinorUnits: null })
+  })
+})

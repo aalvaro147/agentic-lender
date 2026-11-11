@@ -1,7 +1,15 @@
 /* WEB-08: formatters for AL-Core units (cents, basis points) */
 
 import { describe, expect, it } from 'vitest'
-import { EMPTY, formatBps, formatCents, formatDate, formatMultiple, formatPercent } from './format'
+import {
+  EMPTY,
+  formatBps,
+  formatCents,
+  formatDate,
+  formatMultiple,
+  formatPercent,
+  formatArea,
+} from './format'
 
 describe('formatCents', () => {
   it('turns cents into whole euros', () => {
@@ -29,12 +37,19 @@ describe('formatBps', () => {
 describe('existing formatters still work', () => {
   it('formats percentages, multiples and dates', () => {
     expect(formatPercent(90)).toBe('90.0%')
-    expect(formatMultiple(3.98)).toBe('3.98×')
+    expect(formatMultiple(3.98)).toBe('3.98\u00D7')
     expect(formatDate('2026-10-08')).toBe('08 Oct 2026')
   })
 
   it('formats a full ISO timestamp from AL-Core', () => {
     expect(formatDate('2026-10-08T09:30:00Z')).toBe('08 Oct 2026')
+  })
+})
+
+describe('formatArea (WEB-30)', () => {
+  it('shows floor area in square metres', () => {
+    expect(formatArea(110)).toBe('110 m²')
+    expect(formatArea(null)).toBe(EMPTY)
   })
 })
 

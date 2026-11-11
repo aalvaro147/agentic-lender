@@ -1,12 +1,12 @@
 /*  Loads applications for the pipeline, in mock or live (Firestore) mode.
     Both modes return rows built by toPipelineRow(), so the UI never sees raw documents.
     Stories: WEB-09 (mock/live switch), WEB-15 (brokers see only their own clients),
-    WEB-08 (AL-Core document shape) */
+    WEB-08 (AL-Core document shape), WEB-26 (one application for the loan file) */
 
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
 import { USE_MOCKS } from './config'
 import { db } from './firebase'
-import { toPipelineRow } from './applicationMapper'
+import { toLoanFile, toPipelineRow } from './applicationMapper'
 import { ROLES } from '../auth/roles'
 // TEMP(AI-MOCK): mocks follow applications.schema.json; their aiAssessment was generated
 // by the AI engine mock-0.2 from translated inputs (see src/mocks/README.md).
@@ -46,4 +46,29 @@ export async function getApplications(profile) {
     : query(applicationsRef, where('brokerId', '==', profile.uid))
   const [snapshot, usersById] = await Promise.all([getDocs(q), getReadableUsers(profile)])
   return snapshot.docs.map((d) => toPipelineRow({ id: d.id, ...d.data() }, usersById))
+}
+
+// WEB-26: one application for the loan file, or null when it cannot be shown.
+// D5: an unknown ID and another broker's application both return null, so the page
+// shows the same "Application not found" and never confirms that someone else's ID exists.
+export async function getApplication(profile, applicationId) {
+  const isUnderwriter = profile.role === ROLES.UNDERWRITER
+
+  if (USE_MOCKS) {
+    const found = mockApplications.find((a) => a.applicationId === applicationId)
+    if (!found || (!isUnderwriter && found.brokerId !== profile.uid)) return null
+    return toLoanFile(found, mockUsersById)
+  }
+
+  try {
+    const [snapshot, usersById] = await Promise.all([
+      getDoc(doc(db, 'applications', applicationId)),
+      getReadableUsers(profile),
+    ])
+    return snapshot.exists() ? toLoanFile({ id: snapshot.id, ...snapshot.data() }, usersById) : null
+  } catch (error) {
+    // The Security Rules refuse another broker's application: treat it as not found (D5)
+    if (error.code === 'permission-denied') return null
+    throw error
+  }
 }

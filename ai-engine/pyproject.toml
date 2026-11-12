@@ -12,6 +12,7 @@ dependencies = [
     "uvicorn[standard]>=0.29",
     "pydantic>=2.6",
     "pydantic-settings>=2.2",
+    "firebase-admin>=6.5",
 ]
 
 [project.optional-dependencies]

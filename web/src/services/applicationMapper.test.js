@@ -2,7 +2,7 @@
    Sample documents follow applications.schema.json; all data is synthetic. */
 
 import { describe, expect, it } from 'vitest'
-import { toPipelineRow } from './applicationMapper'
+import { toPipelineRow, toLoanFile } from './applicationMapper'
 
 const USERS = {
   'uid-borrower-01': { displayName: 'Aoife Murphy' },
@@ -123,5 +123,38 @@ describe('toPipelineRow', () => {
     const copy = structuredClone(DELIBERATED)
     toPipelineRow(DELIBERATED, USERS)
     expect(DELIBERATED).toEqual(copy)
+  })
+})
+
+describe('toLoanFile (WEB-26, WEB-30)', () => {
+  it('adds the property specification to the pipeline row', () => {
+    const file = toLoanFile(DELIBERATED, USERS)
+    expect(file).toMatchObject(toPipelineRow(DELIBERATED, USERS))
+    expect(file.property).toEqual({
+      location: 'Co. Cork',
+      propertyType: null,
+      bedrooms: null,
+      floorAreaSquareMetres: null,
+      berRating: 'B2',
+    })
+  })
+
+  it('reads the optional property fields when AL-Core has them', () => {
+    const withDetails = {
+      ...APPLIED,
+      propertySpecs: {
+        ...APPLIED.propertySpecs,
+        propertyType: 'Detached house',
+        bedrooms: 4,
+        floorAreaSquareMetres: 165,
+      },
+    }
+    expect(toLoanFile(withDetails).property).toEqual({
+      location: 'Co. Dublin',
+      propertyType: 'Detached house',
+      bedrooms: 4,
+      floorAreaSquareMetres: 165,
+      berRating: 'UNKNOWN',
+    })
   })
 })

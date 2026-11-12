@@ -78,3 +78,23 @@ export function toPipelineRow(doc, usersById = {}) {
     submittedAt: toIsoString(doc.createdAt),
   }
 }
+
+/**
+ * WEB-26 / WEB-30: everything the loan file page shows.
+ * Same values as the pipeline row, plus the property specification.
+ * Optional AL-Core fields that are missing become null (shown as "—").
+ */
+export function toLoanFile(doc, usersById = {}) {
+  const spec = doc.propertySpecs ?? {}
+
+  return {
+    ...toPipelineRow(doc, usersById),
+    property: {
+      location: toLocation(spec.county),
+      propertyType: spec.propertyType ?? null,
+      bedrooms: spec.bedrooms ?? null,
+      floorAreaSquareMetres: spec.floorAreaSquareMetres ?? null,
+      berRating: spec.berRating ?? null,
+    },
+  }
+}

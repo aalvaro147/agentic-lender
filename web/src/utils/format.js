@@ -41,7 +41,11 @@ export const formatBps = (bps, decimals = 1) =>
   isMissing(bps) ? EMPTY : formatPercent(bps / 100, decimals)
 
 // Multiple: 3.98 → 3.98×
-export const formatMultiple = (value) => (isMissing(value) ? EMPTY : `${value.toFixed(2)}×`)
+export const formatMultiple = (value) => (isMissing(value) ? EMPTY : `${value.toFixed(2)}\u00D7`)
+/* ----------------------- PROPERTY ----------------------- */
+
+// Floor area: 110 → 110 m² (WEB-30)
+export const formatArea = (squareMetres) => (isMissing(squareMetres) ? EMPTY : `${squareMetres} m²`)
 
 /* ----------------------- DATES ----------------------- */
 

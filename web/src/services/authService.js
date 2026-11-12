@@ -70,7 +70,7 @@ export function onAuthChange(callback) {
   return onAuthStateChanged(auth, (firebaseUser) => callback(toAuthUser(firebaseUser)))
 }
 
-// WEB-13: load the user's profile (role, name, brokerId) from users/{uid}
+// WEB-13: load the user's profile (role, name) from users/{uid}
 export async function getUserProfile(uid) {
   if (USE_MOCKS) {
     const match = mockUsers.find((u) => u.uid === uid)

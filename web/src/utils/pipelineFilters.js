@@ -6,16 +6,19 @@ import { RISK_LABELS, STATUS_LABELS } from './statuses'
 
 /* ----------------------- LTV BANDS (WEB-21) ----------------------- */
 
-// The ONE place the LTV band limits are defined. `max` is inclusive.
-// 90% = Central Bank of Ireland LTV limit for first-time and second/subsequent buyers.
+// The ONE place the LTV band limits are defined, in basis points (8000 = 80%).
+// `maxBps` is inclusive. 90% = Central Bank of Ireland LTV limit for first-time and
+// second/subsequent buyers.
 export const LTV_BANDS = [
-  { id: 'up-to-80', label: '≤ 80%', max: 80 },
-  { id: '80-to-90', label: '> 80% to 90%', max: 90 },
-  { id: 'over-90', label: '> 90%', max: Infinity },
+  { id: 'up-to-80', label: '≤ 80%', maxBps: 8000 },
+  { id: '80-to-90', label: '> 80% to 90%', maxBps: 9000 },
+  { id: 'over-90', label: '> 90%', maxBps: Infinity },
 ]
 
-export function getLtvBand(ltv) {
-  return LTV_BANDS.find((band) => ltv <= band.max)
+// No LTV yet (AI has not run) → no band, so a band filter hides the application
+export function getLtvBand(ltvBps) {
+  if (ltvBps === null || ltvBps === undefined) return undefined
+  return LTV_BANDS.find((band) => ltvBps <= band.maxBps)
 }
 
 /* ----------------------- FILTERS (WEB-20, 21, 22, 23) ----------------------- */
@@ -33,9 +36,9 @@ export function filterApplications(applications, filters) {
   return applications.filter((app) => {
     if (filters.status !== 'all' && app.status !== filters.status) return false
     if (filters.riskTier !== 'all' && app.riskTier !== filters.riskTier) return false
-    if (filters.ltvBand !== 'all' && getLtvBand(app.ltv)?.id !== filters.ltvBand) return false
+    if (filters.ltvBand !== 'all' && getLtvBand(app.ltvBps)?.id !== filters.ltvBand) return false
     if (term) {
-      const matchesName = app.borrowerName.toLowerCase().includes(term)
+      const matchesName = (app.borrowerName ?? '').toLowerCase().includes(term)
       const matchesId = app.id.toLowerCase().includes(term)
       if (!matchesName && !matchesId) return false
     }
@@ -54,11 +57,11 @@ const SORT_VALUE = {
   id: (app) => app.id,
   borrowerName: (app) => app.borrowerName,
   brokerName: (app) => app.brokerName,
-  loanAmount: (app) => app.loanAmount,
-  ltv: (app) => app.ltv,
+  loanAmountMinorUnits: (app) => app.loanAmountMinorUnits,
+  ltvBps: (app) => app.ltvBps,
   lti: (app) => app.lti,
-  dti: (app) => app.dti,
-  riskTier: (app) => RISK_ORDER.indexOf(app.riskTier),
+  dtiBps: (app) => app.dtiBps,
+  riskTier: (app) => (app.riskTier ? RISK_ORDER.indexOf(app.riskTier) : null),
   status: (app) => STATUS_ORDER.indexOf(app.status),
   submittedAt: (app) => app.submittedAt, // ISO dates sort correctly as text
 }
@@ -74,6 +77,13 @@ export function sortApplications(applications, sort) {
   return [...applications].sort((a, b) => {
     const va = valueOf(a)
     const vb = valueOf(b)
+
+    // Missing values ("—", e.g. no AI result yet) always go last, in both directions
+    const aMissing = va === null || va === undefined
+    const bMissing = vb === null || vb === undefined
+    if (aMissing !== bMissing) return aMissing ? 1 : -1
+    if (aMissing) return a.id.localeCompare(b.id)
+
     const result = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'en-IE')
     // Equal values: fall back to application ID so the order is always the same
     return result !== 0 ? result * factor : a.id.localeCompare(b.id)

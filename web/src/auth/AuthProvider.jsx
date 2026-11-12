@@ -1,6 +1,6 @@
 /* Manages authentication across the whole app.
    - Listens to authService for sign-in / sign-out (also fires on page refresh)
-   - Loads the user's profile (role, name, brokerId) after sign-in
+   - Loads the user's profile (role, name) after sign-in
    - Shares user, profile, role, loading and the login/logout actions via context
    Stories: WEB-11, WEB-12, WEB-13, WEB-16 */
 
@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   /* ----------------------- STATE ----------------------- */
 
   const [user, setUser] = useState(null) // { uid, email } or null
-  const [profile, setProfile] = useState(null) // { displayName, role, brokerId, ... } or null
+  const [profile, setProfile] = useState(null) // { uid, displayName, role, ... } or null
   const [loading, setLoading] = useState(true) // true until the first auth check finishes
   const [authError, setAuthError] = useState(null) // e.g. signed in but no profile in Firestore
 

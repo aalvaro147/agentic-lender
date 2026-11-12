@@ -1,4 +1,4 @@
-# AL Data Contract (v0.3)
+# AL Data Contract (v0.4)
 
 How AL-Web reads and displays the shared AL data. Prepared by AL-Web for group agreement.
 
@@ -176,6 +176,26 @@ same way.
 | `floorAreaSquareMetres` | `propertySpecs.floorAreaSquareMetres` | `null`    |
 | `berRating`             | `propertySpecs.berRating`             | `null`    |
 
+### Collateral and loan structure (`toLoanFile`, WEB-27, WEB-29)
+
+| Field                                      | Source                                                                      | Missing →    |
+| ------------------------------------------ | --------------------------------------------------------------------------- | ------------ |
+| `collateral.askingPriceMinorUnits`         | `propertySpecs.askingPriceMinorUnits`                                       | `null`       |
+| `collateral.valuationMinorUnits`           | `aiAssessment.valuation.estimatedValueMinorUnits`                           | `null` (D10) |
+| `collateral.valuationModelVersion`         | `aiAssessment.valuation.modelVersion`                                       | `null`       |
+| `collateral.isMockValuation`               | `aiAssessment.isMock === true`                                              | `false`      |
+| `collateral.ltvBps`                        | `aiAssessment.valuation.ltvBps` (same as the pipeline row)                  | `null`       |
+| `loanStructure.purchasePriceMinorUnits`    | `propertySpecs.askingPriceMinorUnits`                                       | `null`       |
+| `loanStructure.depositMinorUnits`          | `financialSpecs.depositMinorUnits`                                          | `null`       |
+| `loanStructure.loanAmountMinorUnits`       | asking price − deposit (`TEMP(Q1-LOAN)`)                                    | `null`       |
+| `loanStructure.termMonths`                 | `financialSpecs.requestedTermMonths`                                        | `null`       |
+| `loanStructure.aprBps`                     | `aiAssessment.affordability.aprBps` (`TEMP(AI-FIELDS)`)                     | `null`       |
+| `loanStructure.monthlyRepaymentMinorUnits` | `aiAssessment.affordability.monthlyRepaymentMinorUnits` (`TEMP(AI-FIELDS)`) | `null`       |
+
+AL-Web calculates only the difference between asking price and valuation (in cents and as
+a share of the valuation) and the deposit as a share of the purchase price. It does not
+calculate LTV (D8).
+
 ## 7. Core API calls AL-Web will make (WEB-42, WEB-43)
 
 Base URL from `VITE_CORE_API_URL` (local: `http://localhost:8000`). Every call sends
@@ -273,15 +293,20 @@ audit log, not on-chain.
 
 ## 8. Decisions (AL-Web)
 
-| #   | Decision                                                                                                                                    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | AL-Web uses AL-Core's uppercase status codes everywhere; no translation layer                                                               |
-| D2  | LTV, LTI, DTI and risk show "—" until the AI has run; AL-Web does not calculate them                                                        |
-| D3  | Until the AI returns a risk tier, AL-Web derives one from the recommendation: APPROVE → Low, CONDITIONALLY_APPROVE → Medium, DECLINE → High |
-| D4  | Mocks include one sample per status, including a `REJECTED` application                                                                     |
-| D5  | A broker opening another broker's application sees the same "Application not found" as for an unknown ID (11 Nov)                           |
-| D6  | WEB-26 and WEB-30 are delivered together (11 Nov)                                                                                           |
-| D7  | The loan file shows labelled placeholders for sections built in later stories (WEB-27, 28, 29, 31) (11 Nov)                                 |
+| #   | Decision                                                                                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | AL-Web uses AL-Core's uppercase status codes everywhere; no translation layer                                                                         |
+| D2  | LTV, LTI, DTI and risk show "—" until the AI has run; AL-Web does not calculate them                                                                  |
+| D3  | Until the AI returns a risk tier, AL-Web derives one from the recommendation: APPROVE → Low, CONDITIONALLY_APPROVE → Medium, DECLINE → High           |
+| D4  | Mocks include one sample per status, including a `REJECTED` application                                                                               |
+| D5  | A broker opening another broker's application sees the same "Application not found" as for an unknown ID (11 Nov)                                     |
+| D6  | WEB-26 and WEB-30 are delivered together (11 Nov)                                                                                                     |
+| D7  | The loan file shows labelled placeholders for sections built in later stories (WEB-27, 28, 29, 31) (11 Nov)                                           |
+| D8  | The collateral card shows only the AI's LTV (on the lower of asking price and valuation); AL-Web does not calculate LTV on the asking price (11 Nov)  |
+| D9  | The asking-price badge is neutral until the AI sends a structured overvaluation flag (`TEMP(AI-OVERVALUED)`) (11 Nov)                                 |
+| D10 | Before the AI has run, the collateral card shows the asking price and "Valuation pending AI assessment" (11 Nov)                                      |
+| D11 | Loan structure shows the AI's `aprBps` as "Indicative rate (AI)"; it already includes any BER discount. The settlement base rate is still Q5 (11 Nov) |
+| D12 | The deposit is shown with its share of the purchase price (deposit ÷ price) (11 Nov)                                                                  |
 
 ## 9. Open questions
 
@@ -298,14 +323,15 @@ Resolved since v0.1: statuses (`REJECTED` added, uppercase), who calculates LTV/
 
 ## 10. Temporary items register
 
-| Tag               | What is temporary                                                  | Files                                                                                | Permanent when                      |
-| ----------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ----------------------------------- |
-| `TEMP(Q1-LOAN)`   | loan = asking price − deposit                                      | `services/applicationMapper.js`, `pages/PipelinePage.jsx`, `\pages/LoanFilePage.jsx` | Q1 answered                         |
-| `TEMP(Q2-PERIOD)` | mock income annual, mock debt monthly                              | `mocks/README.md`                                                                    | Q2 answered                         |
-| `TEMP(Q3-NAMES)`  | names from `users/{uid}`; mock mode shows them to brokers          | `services/applicationMapper.js`, `services/applicationService.js`                    | Q3 answered                         |
-| `TEMP(Q4-RISK)`   | risk tier derived from the recommendation (D3)                     | `services/applicationMapper.js`, `utils/statuses.js`                                 | Q4 answered                         |
-| `TEMP(AI-FIELDS)` | `affordability.dtiBps`, `loanToIncomeMultiple` names               | `services/applicationMapper.js`                                                      | AI's Core-aligned version merged    |
-| `TEMP(AI-MOCK)`   | mock `aiAssessment` generated by `mock-0.2` from translated inputs | `services/applicationService.js`, `mocks/README.md`                                  | mocks regenerated with that version |
+| Tag                   | What is temporary                                                  | Files                                                                                                                   | Permanent when                             |
+| --------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `TEMP(Q1-LOAN)`       | loan = asking price − deposit                                      | `services/applicationMapper.js`, `pages/PipelinePage.jsx`, `pages/LoanFilePage.jsx`, `components/LoanStructureCard.jsx` | Q1 answered                                |
+| `TEMP(Q2-PERIOD)`     | mock income annual, mock debt monthly                              | `mocks/README.md`                                                                                                       | Q2 answered                                |
+| `TEMP(Q3-NAMES)`      | names from `users/{uid}`; mock mode shows them to brokers          | `services/applicationMapper.js`, `services/applicationService.js`                                                       | Q3 answered                                |
+| `TEMP(Q4-RISK)`       | risk tier derived from the recommendation (D3)                     | `services/applicationMapper.js`, `utils/statuses.js`                                                                    | Q4 answered                                |
+| `TEMP(AI-FIELDS)`     | `affordability.dtiBps`, `loanToIncomeMultiple` names               | `services/applicationMapper.js`                                                                                         | AI's Core-aligned version merged           |
+| `TEMP(AI-MOCK)`       | mock `aiAssessment` generated by `mock-0.2` from translated inputs | `services/applicationService.js`, `mocks/README.md`                                                                     | mocks regenerated with that version        |
+| `TEMP(AI-OVERVALUED)` | neutral asking-price badge; no warning colour (D9)                 | `components/CollateralCard.jsx`                                                                                         | AI returns a structured overvaluation flag |
 
 Resolved: `TEMP(OLD-MOCKS)` (`formatEuro` removed in WEB-08).
 
@@ -323,3 +349,4 @@ Details and temporary notes: `web/src/mocks/README.md`.
 | v0.1    | Oct 2026    | AL-Web draft: lowercase statuses, euros and percentages                                         |
 | v0.2    | 11 Nov 2026 | Aligned with AL-Core schemas and API; AI fields; mapping; decisions D1–D4; Q1–Q5; TEMP register |
 | v0.3    | 11 Nov 2026 | Loan file mapping (WEB-26, WEB-30); decisions D5–D7                                             |
+| v0.4    | 11 Nov 2026 | Collateral and loan structure mapping (WEB-27, WEB-29); decisions D8–D12; `TEMP(AI-OVERVALUED)` |

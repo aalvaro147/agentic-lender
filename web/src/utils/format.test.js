@@ -9,6 +9,8 @@ import {
   formatMultiple,
   formatPercent,
   formatArea,
+  formatSignedCents,
+  formatTerm,
 } from './format'
 
 describe('formatCents', () => {
@@ -43,6 +45,24 @@ describe('existing formatters still work', () => {
 
   it('formats a full ISO timestamp from AL-Core', () => {
     expect(formatDate('2026-10-08T09:30:00Z')).toBe('08 Oct 2026')
+  })
+})
+
+describe('formatSignedCents (WEB-27)', () => {
+  it('shows a plus or minus sign, and no sign for zero', () => {
+    expect(formatSignedCents(1185000)).toBe('+€11,850')
+    expect(formatSignedCents(-1185000)).toBe('-€11,850')
+    expect(formatSignedCents(0)).toBe('€0')
+    expect(formatSignedCents(null)).toBe(EMPTY)
+  })
+})
+
+describe('formatTerm (WEB-29)', () => {
+  it('shows months as years and months', () => {
+    expect(formatTerm(360)).toBe('30 years')
+    expect(formatTerm(306)).toBe('25 years 6 months')
+    expect(formatTerm(13)).toBe('1 year 1 month')
+    expect(formatTerm(null)).toBe(EMPTY)
   })
 })
 

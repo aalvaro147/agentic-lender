@@ -1,14 +1,15 @@
 /* Origination pipeline (mock-up screens 02a and 02b).
   Underwriters see every application; brokers see only their referred clients,
-  because getApplications() filters by the signed-in profile.
+  because subscribeApplications() filters by the signed-in profile.
   Stories: WEB-15, WEB-18, WEB-19, WEB-25 (summary cards),
-  WEB-20 / 21 / 22 (filters), WEB-23 (search + sort), WEB-08 (AL-Core data shape) */
+  WEB-20 / 21 / 22 (filters), WEB-23 (search + sort), WEB-08 (AL-Core data shape),
+  WEB-24 (real-time updates) */
 
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import { ROLES } from '../auth/roles'
-import { getApplications } from '../services/applicationService'
+import { subscribeApplications } from '../services/applicationService'
 import { RiskBadge, StatusBadge } from '../components/Badges'
 import { STATUS_LABELS } from '../utils/statuses'
 import { EMPTY, formatBps, formatCents, formatDate, formatMultiple } from '../utils/format'
@@ -34,24 +35,23 @@ export function PipelinePage() {
 
   /* ----------------------- LOAD DATA ----------------------- */
 
+  // WEB-24: listen for changes instead of loading once. Every update replaces the rows,
+  // and the filters, search and sort below are applied to the new rows automatically.
+  // The returned stop function runs when the page closes, so no update arrives after
+  // that (this replaces the FLT-02 "cancelled" flag).
   useEffect(() => {
-    let cancelled = false
-
-    getApplications(profile)
-      .then((data) => {
-        // FLT-02: set once, and only while still mounted (DEFAULT_SORT orders the rows)
-        if (!cancelled) setApplications(data)
-      })
-      .catch(() => {
-        if (!cancelled) setError('Could not load applications. Please try again later.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
+    return subscribeApplications(
+      profile,
+      (rows) => {
+        setApplications(rows)
+        setError('')
+        setLoading(false)
+      },
+      () => {
+        setError('Could not load applications. Please try again later.')
+        setLoading(false)
+      },
+    )
   }, [profile])
 
   /* ----------------------- DERIVED DATA ----------------------- */

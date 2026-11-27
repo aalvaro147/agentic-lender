@@ -3,11 +3,8 @@
 How AL-Web reads and displays the shared AL data. Prepared by AL-Web for group agreement.
 
 - **Source of truth:** AL-Core's JSON schemas in
-  `al-core-ledger/firebase/schemas/` (`applications.schema.json`, `users.schema.json`) and
-  the API contract in `al-core-ledger/docs/integration-api.md`. If this file and those
-  disagree, **the schemas win** and this file must be corrected.
-- **Agreed (group, Nov 2026):** the whole project uses the AL-Core schemas; the AI engine is
-  being aligned to them.
+  `al-core-ledger/firebase/schemas/` (`applications.schema.json`, `users.schema.json`) and the API contract in `al-core-ledger/docs/integration-api.md`. If this file and those disagree, **the schemas win** and this file must be corrected.
+- **Agreed (group, Nov 2026):** the whole project uses the AL-Core schemas; the AI engine is being aligned to them.
 - **Change process:** change shared field names through a pull request reviewed by the
   module owners (team-integration-guide.md, section 5).
 - **Temporary items** are marked `TEMP(<tag>)` in the code. List them with
@@ -25,8 +22,7 @@ How AL-Web reads and displays the shared AL data. Prepared by AL-Web for group a
 | Status, roles   | exact strings (case matters)  | `AI_DELIBERATED`       | AI Deliberated |
 | Missing value   | field absent or `null`        | no `aiAssessment` yet  | —              |
 
-AL-Web never turns a missing value into `0` (team-integration-guide.md: "missing or invalid
-required inputs" are an error, "not zero-valued data").
+AL-Web never turns a missing value into `0` (team-integration-guide.md: "missing or invalid required inputs" are an error, "not zero-valued data").
 
 ## 2. `users/{uid}`
 
@@ -44,15 +40,12 @@ Required: `uid`, `email`, `role`, `createdAt`. No other fields allowed
 
 - A broker is identified by their **uid**. There is no `brokerId` field on the profile
   (v0.1 had one; removed).
-- The role used for access control is the Firebase custom claim `role`; the profile field
-  mirrors it.
-- **Read access (firestore.rules):** a user reads their own profile; an underwriter reads
-  any profile. A broker cannot read borrowers' profiles (see Q3).
+- The role used for access control is the Firebase custom claim `role`; the profile field mirrors it.
+- **Read access (firestore.rules):** a user reads their own profile; an underwriter reads any profile. A broker cannot read borrowers' profiles (see Q3).
 
 ## 3. `applications/{applicationId}`
 
-Required: `applicationId`, `borrowerId`, `status`, `createdAt`. No other top-level fields
-allowed.
+Required: `applicationId`, `borrowerId`, `status`, `createdAt`. No other top-level fields allowed.
 
 | Field                 | Type           | Values / notes                                              |
 | --------------------- | -------------- | ----------------------------------------------------------- |
@@ -140,8 +133,7 @@ DTI = (new repayment + existing debt) ÷ net monthly income.
 
 ## 6. AL-Web pipeline row (`services/applicationMapper.js`)
 
-Mock and live data both pass through `toPipelineRow(doc, usersById)`. Units are kept as
-stored; formatting happens only in `utils/format.js`.
+Mock and live data both pass through `toPipelineRow(doc, usersById)`. Units are kept as stored; formatting happens only in `utils/format.js`.
 
 | Row field              | Source                                              | Missing →   |
 | ---------------------- | --------------------------------------------------- | ----------- |
@@ -165,8 +157,7 @@ enforces. Only an underwriter loads `users` for names.
 
 `getApplication(profile, applicationId)` returns the pipeline row above plus `property`,
 or `null` when the application cannot be shown. An unknown ID and another broker's
-application both return `null` (D5); live mode treats Firestore `permission-denied` the
-same way.
+application both return `null` (D5); live mode treats Firestore `permission-denied` the same way.
 
 | `property` field        | Source                                | Missing → |
 | ----------------------- | ------------------------------------- | --------- |
@@ -192,15 +183,24 @@ same way.
 | `loanStructure.aprBps`                     | `aiAssessment.affordability.aprBps` (`TEMP(AI-FIELDS)`)                     | `null`       |
 | `loanStructure.monthlyRepaymentMinorUnits` | `aiAssessment.affordability.monthlyRepaymentMinorUnits` (`TEMP(AI-FIELDS)`) | `null`       |
 
-AL-Web calculates only the difference between asking price and valuation (in cents and as
-a share of the valuation) and the deposit as a share of the purchase price. It does not
-calculate LTV (D8).
+AL-Web calculates only the difference between asking price and valuation (in cents and as a share of the valuation) and the deposit as a share of the purchase price. It does not calculate LTV (D8).
+
+### Credit memorandum (`toLoanFile`, WEB-36)
+
+| Field                     | Source                                           | Missing → |
+| ------------------------- | ------------------------------------------------ | --------- |
+| `creditMemo`              | `null` when `aiAssessment.creditMemo` is missing | `null`    |
+| `creditMemo.text`         | `aiAssessment.creditMemo` (shown in full)        | `null`    |
+| `creditMemo.modelVersion` | `aiAssessment.modelVersion`                      | `null`    |
+| `creditMemo.generatedAt`  | `aiAssessment.createdAt`                         | `null`    |
+| `creditMemo.isMock`       | `aiAssessment.isMock === true`                   | `false`   |
+
+The audit console (`/applications/{id}/audit`) shows the memo with the model version, the date and a "Mock AI output" label while `isMock` is true. Per-agent output for WEB-32 to WEB-35 does not exist yet, so that part is a labelled placeholder (D7).
 
 ## 7. Core API calls AL-Web will make (WEB-42, WEB-43)
 
 Base URL from `VITE_CORE_API_URL` (local: `http://localhost:8000`). Every call sends
-`Authorization: Bearer <Firebase ID token>`. The approve/reject actions are shown only to
-an underwriter; the API re-checks the role.
+`Authorization: Bearer <Firebase ID token>`. The approve/reject actions are shown only to an underwriter; the API re-checks the role.
 
 ### `POST /v1/applications/{applicationId}/settlement`
 
@@ -261,8 +261,7 @@ A retry must send the **same body**, including `approvedAt`. `auditTxHash` or
 
 ### `POST /v1/applications/{applicationId}/rejection`
 
-Allowed only when the application is `AI_DELIBERATED`. The reason stays in a restricted
-audit log, not on-chain.
+Allowed only when the application is `AI_DELIBERATED`. The reason stays in a restricted audit log, not on-chain.
 
 ```json
 {
@@ -350,3 +349,4 @@ Details and temporary notes: `web/src/mocks/README.md`.
 | v0.2    | 11 Nov 2026 | Aligned with AL-Core schemas and API; AI fields; mapping; decisions D1–D4; Q1–Q5; TEMP register |
 | v0.3    | 11 Nov 2026 | Loan file mapping (WEB-26, WEB-30); decisions D5–D7                                             |
 | v0.4    | 11 Nov 2026 | Collateral and loan structure mapping (WEB-27, WEB-29); decisions D8–D12; `TEMP(AI-OVERVALUED)` |
+| v0.5    | 27 Nov 2026 | Credit memorandum mapping for the audit console (WEB-36)                                        |

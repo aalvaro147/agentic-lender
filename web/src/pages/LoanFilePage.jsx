@@ -85,20 +85,22 @@ export function LoanFilePage() {
     <div className="flex flex-col gap-6">
       {breadcrumb}
 
-      {/* Borrower summary (WEB-26) */}
-      <header>
-        <h1 className="text-3xl font-semibold">{file.borrowerName ?? EMPTY}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-          <StatusBadge status={file.status} />
-          {file.riskTier && <RiskBadge tier={file.riskTier} suffix=" risk" />}
-          <span>
-            {!isBroker && <>Broker: {file.brokerName ?? EMPTY} · </>}
-            Submitted {formatDate(file.submittedAt)}
-          </span>
+      {/* Borrower summary (WEB-26); the audit console button sits on the right (WEB-36) */}
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold">{file.borrowerName ?? EMPTY}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
+            <StatusBadge status={file.status} />
+            {file.riskTier && <RiskBadge tier={file.riskTier} suffix=" risk" />}
+            <span>
+              {!isBroker && <>Broker: {file.brokerName ?? EMPTY} · </>}
+              Submitted {formatDate(file.submittedAt)}
+            </span>
+          </div>
         </div>
         <Link
           to={`/applications/${id}/audit`}
-          className="mt-3 inline-block text-sm font-medium text-brand hover:text-brand-dark"
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
         >
           Open AI audit console
         </Link>

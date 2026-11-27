@@ -118,4 +118,14 @@ describe('LoanFilePage', () => {
     expect(within(collateral).getByText('€525,000')).toBeInTheDocument()
     expect(within(collateral).getByText('Valuation pending AI assessment.')).toBeInTheDocument()
   })
+
+  it('links to the AI audit console for the same application (WEB-36)', async () => {
+    openAs(orla, 'AL-2026-0148')
+    await screen.findByRole('heading', { name: 'Aoife Murphy' })
+
+    expect(screen.getByRole('link', { name: 'Open AI audit console' })).toHaveAttribute(
+      'href',
+      '/applications/AL-2026-0148/audit',
+    )
+  })
 })

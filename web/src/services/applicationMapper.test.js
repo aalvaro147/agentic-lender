@@ -191,3 +191,28 @@ describe('toLoanFile collateral and loan structure (WEB-27, WEB-29)', () => {
     expect(file.loanStructure).toMatchObject({ aprBps: null, monthlyRepaymentMinorUnits: null })
   })
 })
+
+describe('toLoanFile credit memo (WEB-36)', () => {
+  it('maps the memo text with the model version, date and mock flag', () => {
+    const withMemo = {
+      ...DELIBERATED,
+      aiAssessment: {
+        ...DELIBERATED.aiAssessment,
+        modelVersion: 'mock-0.2',
+        isMock: true,
+        creditMemo: 'MOCK credit memo. Recommendation: CONDITIONALLY_APPROVE.',
+      },
+    }
+    expect(toLoanFile(withMemo, USERS).creditMemo).toEqual({
+      text: 'MOCK credit memo. Recommendation: CONDITIONALLY_APPROVE.',
+      modelVersion: 'mock-0.2',
+      generatedAt: '2026-10-08T10:00:00Z',
+      isMock: true,
+    })
+  })
+
+  it('has no credit memo before the AI has run, or when the AI sent none', () => {
+    expect(toLoanFile(APPLIED).creditMemo).toBeNull()
+    expect(toLoanFile(DELIBERATED, USERS).creditMemo).toBeNull()
+  })
+})

@@ -120,5 +120,15 @@ export function toLoanFile(doc, usersById = {}) {
       aprBps: ai?.affordability?.aprBps ?? null,
       monthlyRepaymentMinorUnits: ai?.affordability?.monthlyRepaymentMinorUnits ?? null,
     },
+
+    // WEB-36: the AI's credit memorandum for the audit console (null until the AI has run)
+    creditMemo: ai?.creditMemo
+      ? {
+          text: ai.creditMemo,
+          modelVersion: ai.modelVersion ?? null,
+          generatedAt: ai.createdAt ?? null,
+          isMock: ai.isMock === true,
+        }
+      : null,
   }
 }

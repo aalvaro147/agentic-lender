@@ -1,15 +1,14 @@
 /* Loan file: one application in detail (mock-up screen 03).
    Stories: WEB-26 (open from the pipeline; unknown ID → "not found"),
    WEB-30 (property specification), WEB-27 (collateral), WEB-29 (loan structure),
-   WEB-15 (brokers cannot open other brokers' files).
+   WEB-15 (brokers cannot open other brokers' files), WEB-36 (link to the AI audit console).
    Decisions: D5 (another broker's file looks exactly like an unknown ID),
    D7 (labelled placeholders for sections built in later stories). */
 
-import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import { ROLES } from '../auth/roles'
-import { getApplication } from '../services/applicationService'
+import { useApplication } from '../hooks/useApplication'
 import { RiskBadge, StatusBadge } from '../components/Badges'
 import { KeyFigure, PropertyCard, SectionPlaceholder } from '../components/LoanFileSections'
 import { EMPTY, formatBps, formatCents, formatDate, formatMultiple } from '../utils/format'
@@ -20,38 +19,10 @@ const WAITING_FOR_AI = 'Waiting for AI assessment'
 
 export function LoanFilePage() {
   const { id } = useParams() // the :id part of /applications/:id
-  const { profile, role } = useAuth()
+  const { role } = useAuth()
   const isBroker = role === ROLES.BROKER
   const pipelineLabel = isBroker ? 'My clients' : 'Pipeline'
-
-  // `forId` records which ID the result belongs to, so opening another file
-  // shows "Loading…" again instead of the previous application
-  const [result, setResult] = useState({ forId: null, file: null, error: '' })
-  const loading = result.forId !== id
-
-  /* ----------------------- LOAD DATA ----------------------- */
-
-  useEffect(() => {
-    let cancelled = false
-
-    getApplication(profile, id)
-      .then((file) => {
-        if (!cancelled) setResult({ forId: id, file, error: '' })
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setResult({
-            forId: id,
-            file: null,
-            error: 'Could not load the application. Please try again later.',
-          })
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [profile, id])
+  const { loading, file: loadedFile, error } = useApplication(id)
 
   /* ----------------------- RENDER ----------------------- */
 
@@ -75,19 +46,19 @@ export function LoanFilePage() {
     )
   }
 
-  if (result.error) {
+  if (error) {
     return (
       <div className="flex flex-col gap-6">
         {breadcrumb}
         <p role="alert" className="rounded-md bg-risk-high-bg px-3 py-2 text-sm text-risk-high">
-          {result.error}
+          {error}
         </p>
       </div>
     )
   }
 
   // D5: unknown ID and another broker's application end here in the same way
-  if (!result.file) {
+  if (!loadedFile) {
     return (
       <div className="flex flex-col gap-6">
         {breadcrumb}
@@ -107,7 +78,7 @@ export function LoanFilePage() {
     )
   }
 
-  const file = result.file
+  const file = loadedFile
   const hasAi = file.ltvBps !== null
 
   return (
@@ -125,6 +96,12 @@ export function LoanFilePage() {
             Submitted {formatDate(file.submittedAt)}
           </span>
         </div>
+        <Link
+          to={`/applications/${id}/audit`}
+          className="mt-3 inline-block text-sm font-medium text-brand hover:text-brand-dark"
+        >
+          Open AI audit console
+        </Link>
       </header>
 
       {/* Headline figures: the same values as the pipeline row */}

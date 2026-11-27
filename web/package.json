@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:emulator": "vite --mode emulator",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "emulators": "node -e \"require('fs').copyFileSync('../al-core-ledger/firebase/firestore.rules', 'firestore.rules')\" && firebase emulators:start --project demo-al",
+    "seed:emulator": "node scripts/seed-emulator.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

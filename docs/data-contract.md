@@ -196,6 +196,20 @@ AL-Web calculates only the difference between asking price and valuation (in cen
 a share of the valuation) and the deposit as a share of the purchase price. It does not
 calculate LTV (D8).
 
+### Credit memorandum (`toLoanFile`, WEB-36)
+
+| Field                     | Source                                           | Missing → |
+| ------------------------- | ------------------------------------------------ | --------- |
+| `creditMemo`              | `null` when `aiAssessment.creditMemo` is missing | `null`    |
+| `creditMemo.text`         | `aiAssessment.creditMemo` (shown in full)        | `null`    |
+| `creditMemo.modelVersion` | `aiAssessment.modelVersion`                      | `null`    |
+| `creditMemo.generatedAt`  | `aiAssessment.createdAt`                         | `null`    |
+| `creditMemo.isMock`       | `aiAssessment.isMock === true`                   | `false`   |
+
+The audit console (`/applications/{id}/audit`) shows the memo with the model version, the
+date and a "Mock AI output" label while `isMock` is true. Per-agent output for WEB-32 to
+WEB-35 does not exist yet, so that part is a labelled placeholder (D7).
+
 ## 7. Core API calls AL-Web will make (WEB-42, WEB-43)
 
 Base URL from `VITE_CORE_API_URL` (local: `http://localhost:8000`). Every call sends
@@ -350,3 +364,4 @@ Details and temporary notes: `web/src/mocks/README.md`.
 | v0.2    | 11 Nov 2026 | Aligned with AL-Core schemas and API; AI fields; mapping; decisions D1–D4; Q1–Q5; TEMP register |
 | v0.3    | 11 Nov 2026 | Loan file mapping (WEB-26, WEB-30); decisions D5–D7                                             |
 | v0.4    | 11 Nov 2026 | Collateral and loan structure mapping (WEB-27, WEB-29); decisions D8–D12; `TEMP(AI-OVERVALUED)` |
+| v0.5    | 27 Nov 2026 | Credit memorandum mapping for the audit console (WEB-36)                                        |

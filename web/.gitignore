@@ -23,3 +23,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# WEB-24: Firebase emulators. firestore.rules is copied from al-core-ledger by
+# "npm run emulators" so the emulator always uses Core's current rules (never edit it here).
+firestore.rules
+.firebase

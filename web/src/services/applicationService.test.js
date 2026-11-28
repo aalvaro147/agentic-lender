@@ -1,12 +1,16 @@
-import { describe, it, expect } from 'vitest'
-import { getApplications, getApplication } from './applicationService'
+import { describe, it, expect, vi } from 'vitest'
+import { subscribeApplications, getApplication } from './applicationService'
 
 // Profiles as AL-Core stores them: a broker is identified by their uid (no brokerId field)
 const orla = { uid: 'mock-underwriter-01', role: 'underwriter' }
 const ciaran = { uid: 'mock-broker-01', role: 'broker' }
 const emma = { uid: 'mock-broker-02', role: 'broker' }
 
-describe('getApplications', () => {
+// The rows a profile receives from subscribeApplications (mock mode sends them once)
+const getApplications = (profile) =>
+  new Promise((resolve) => subscribeApplications(profile, resolve))
+
+describe('subscribeApplications in mock mode', () => {
   it('returns every application to an underwriter', async () => {
     const apps = await getApplications(orla)
     expect(apps).toHaveLength(8)
@@ -33,6 +37,14 @@ describe('getApplications', () => {
       loanAmountMinorUnits: 34200000,
     })
     expect(aoife).not.toHaveProperty('financialSpecs')
+  })
+
+  it('sends the rows once and returns a stop function (WEB-24)', () => {
+    const onRows = vi.fn()
+    const stop = subscribeApplications(orla, onRows, vi.fn())
+    expect(onRows).toHaveBeenCalledTimes(1)
+    expect(typeof stop).toBe('function')
+    expect(() => stop()).not.toThrow()
   })
 })
 

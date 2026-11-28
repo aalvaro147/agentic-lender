@@ -1,9 +1,10 @@
 /*  Loads applications for the pipeline, in mock or live (Firestore) mode.
     Both modes return rows built by toPipelineRow(), so the UI never sees raw documents.
     Stories: WEB-09 (mock/live switch), WEB-15 (brokers see only their own clients),
-    WEB-08 (AL-Core document shape), WEB-26 (one application for the loan file) */
+    WEB-08 (AL-Core document shape), WEB-26 (one application for the loan file),
+    WEB-24 (real-time pipeline: subscribeApplications) */
 
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
 import { USE_MOCKS } from './config'
 import { db } from './firebase'
 import { toLoanFile, toPipelineRow } from './applicationMapper'
@@ -30,22 +31,69 @@ async function getReadableUsers(profile) {
 
 // WEB-15: brokers get only applications assigned to them (brokerId = their uid);
 // underwriters get everything. In live mode the Security Rules enforce the same.
-export async function getApplications(profile) {
-  const isUnderwriter = profile.role === ROLES.UNDERWRITER
-
-  if (USE_MOCKS) {
-    const docs = isUnderwriter
+function mockRows(profile) {
+  const docs =
+    profile.role === ROLES.UNDERWRITER
       ? mockApplications
       : mockApplications.filter((a) => a.brokerId === profile.uid)
-    return docs.map((d) => toPipelineRow(d, mockUsersById))
-  }
+  return docs.map((d) => toPipelineRow(d, mockUsersById))
+}
 
+// The rules only allow a broker to list applications when the query itself filters
+// by brokerId == their uid (rules are not filters), so the filter must stay here.
+function applicationsQuery(profile) {
   const applicationsRef = collection(db, 'applications')
-  const q = isUnderwriter
+  return profile.role === ROLES.UNDERWRITER
     ? applicationsRef
     : query(applicationsRef, where('brokerId', '==', profile.uid))
-  const [snapshot, usersById] = await Promise.all([getDocs(q), getReadableUsers(profile)])
-  return snapshot.docs.map((d) => toPipelineRow({ id: d.id, ...d.data() }, usersById))
+}
+
+// WEB-24: keeps the pipeline up to date without a page refresh.
+// Calls onRows(rows) with the full list every time Firestore reports a change, and
+// onError(error) if loading fails. Returns a function that stops listening.
+// Mock mode sends the mock rows once (mock data never changes).
+export function subscribeApplications(profile, onRows, onError) {
+  if (USE_MOCKS) {
+    onRows(mockRows(profile))
+    return () => {}
+  }
+
+  let active = true
+  let latestDocs = null
+  let usersById = null
+
+  // Rows are sent only when both the applications and the names are ready, so the
+  // table never shows a row without names first. Names are read once per subscription:
+  // a borrower created after the page opened shows "—" until the page is reloaded.
+  const emit = () => {
+    if (!active || latestDocs === null || usersById === null) return
+    onRows(latestDocs.map((d) => toPipelineRow({ id: d.id, ...d.data() }, usersById)))
+  }
+
+  getReadableUsers(profile)
+    .then((users) => {
+      usersById = users
+      emit()
+    })
+    .catch((error) => {
+      if (active) onError(error)
+    })
+
+  const unsubscribe = onSnapshot(
+    applicationsQuery(profile),
+    (snapshot) => {
+      latestDocs = snapshot.docs
+      emit()
+    },
+    (error) => {
+      if (active) onError(error)
+    },
+  )
+
+  return () => {
+    active = false
+    unsubscribe()
+  }
 }
 
 // WEB-26: one application for the loan file, or null when it cannot be shown.
